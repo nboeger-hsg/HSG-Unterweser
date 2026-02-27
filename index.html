@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#05101f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HSG Unterweser II"/>
+<title>HSG Unterweser II</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#05101f;--bg2:#0b1929;--bg3:#112240;--panel:#091526;
+  --b1:rgba(255,255,255,0.06);--b2:rgba(61,142,240,0.22);
+  --blue:#1e6fe0;--blue2:#5aaeff;
+  --amber:#f0a500;--amber2:#ffc62b;
+  --green:#22c55e;--red:#ef4444;--steel:#94a3b8;
+  --white:#e8f0fe;--text:#b8cce0;--muted:#4e6a88;
+  --r:12px;--shadow:0 8px 32px rgba(0,0,0,.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+
+/* HEADER */
+header{
+  background:linear-gradient(90deg,#060d1a,#0c1b34);
+  border-bottom:1px solid var(--b2);padding:10px 14px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  box-shadow:0 2px 24px rgba(0,0,0,.8);z-index:200;position:relative;
+}
+.logo{
+  width:44px;height:44px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),#0a4fb0);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;
+  color:#fff;text-align:center;line-height:1.1;
+  box-shadow:0 0 20px rgba(30,111,224,.4);
+}
+.hd-info h1{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--white);line-height:1}
+.hd-info small{font-size:10px;color:var(--muted)}
+.hd-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.hd-btn{background:var(--bg3);border:1px solid var(--b2);color:var(--blue2);border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.5px;transition:all .15s;line-height:1}
+.hd-btn:active{background:var(--blue);transform:scale(.93)}
+.admin-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* NAV */
+nav{background:var(--bg2);border-bottom:1px solid var(--b1);display:flex;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:58px;padding:9px 4px 7px;text-align:center;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);user-select:none;white-space:nowrap}
+.tab .ti{font-size:18px;display:block;margin-bottom:2px;line-height:1}
+.tab.on{color:var(--amber);border-bottom-color:var(--amber);background:rgba(240,165,0,.05)}
+.tab:active{opacity:.7}
+
+/* CONTENT */
+.content{flex:1;overflow:hidden;position:relative}
+.view{position:absolute;inset:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.view.on{display:block}
+.pad{padding:12px 12px 88px}
+
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--b1);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+
+/* SECTION HEADER */
+.shdr{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue2);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.shdr::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--bg3),#071528);border:1px solid var(--b2);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(30,111,224,.12) 0%,transparent 70%);pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.hero-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue2);margin-bottom:3px}
+.hero-sub{font-size:12px;color:var(--muted)}
+.rank-ring{width:56px;height:56px;border-radius:50%;border:2px solid var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(240,165,0,.07);font-family:'Rajdhani',sans-serif;flex-shrink:0}
+.rank-n{font-size:24px;font-weight:700;color:var(--amber);line-height:1}
+.rank-l{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sbox{background:rgba(0,0,0,.3);border-radius:8px;padding:8px 4px;text-align:center}
+.sn{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;line-height:1;color:var(--white)}
+.sn.g{color:var(--green)}.sn.r{color:var(--red)}.sn.b{color:var(--blue2)}.sn.a{color:var(--amber)}
+.sl{font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+
+/* GAME CARD */
+.gc{background:var(--panel);border:1px solid var(--b1);border-radius:var(--r);padding:12px 12px 12px 16px;margin-bottom:8px;position:relative;overflow:hidden}
+.gc .bar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;background:var(--muted)}
+.gc.win .bar{background:var(--green)}.gc.loss .bar{background:var(--red)}.gc.draw .bar{background:var(--amber)}.gc.future .bar{background:var(--blue)}
+.gc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.gc-round{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.gc-date{font-size:11px;color:var(--amber);font-weight:600}
+.gc-teams{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gc-tn{flex:1;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white);line-height:1.2}
+.gc-tn.own{color:var(--amber2)}.gc-tn.right{text-align:right}
+.gc-sc{flex-shrink:0;min-width:54px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--white)}
+.gc-vs{font-size:11px;letter-spacing:2px;color:var(--muted);font-family:'Rajdhani',sans-serif}
+.gc-foot{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.gc-note{margin-top:7px;font-size:11px;color:var(--muted);border-top:1px solid var(--b1);padding-top:6px;line-height:1.5}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 8px;border-radius:20px}
+.chip.win{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.chip.loss{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.chip.draw{background:rgba(240,165,0,.12);color:var(--amber);border:1px solid rgba(240,165,0,.25)}
+.chip.home{background:rgba(90,174,255,.1);color:var(--blue2);border:1px solid rgba(90,174,255,.2)}
+.chip.away{background:rgba(148,163,184,.08);color:var(--steel);border:1px solid var(--b1)}
+.pdf-btn{display:inline-flex;align-items:center;gap:3px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ff8a80;border-radius:6px;padding:3px 8px;font-size:10px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.8px;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.pdf-btn.edit{background:rgba(90,174,255,.1);border-color:rgba(90,174,255,.3);color:var(--blue2)}
+.pdf-btn.del{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--red)}
+
+/* NEXT MATCH */
+.nm{background:var(--panel);border:1px solid var(--blue);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:0 0 24px rgba(30,111,224,.15)}
+.nm-lbl{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.nm-lbl::after{content:'';flex:1;height:1px;background:var(--b2)}
+.nm-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nm-tn{flex:1;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;line-height:1.15;color:var(--white)}
+.nm-tn.own{color:var(--amber2)}.nm-tn.right{text-align:right}
+.nm-vs{flex-shrink:0;min-width:38px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--muted)}
+.nm-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted)}
+.cd{display:flex;gap:6px;margin-top:10px}
+.cdb{flex:1;background:rgba(0,0,0,.4);border-radius:8px;padding:8px 4px;text-align:center}
+.cdn{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--white);line-height:1}
+.cdl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* TABLE */
+.tbl-wrap{border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg3);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:9px 6px;text-align:center;border-bottom:1px solid var(--b1);white-space:nowrap}
+thead th:nth-child(2){text-align:left;padding-left:10px}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03)}
+tbody tr:last-child{border-bottom:none}
+tbody tr.own{background:rgba(240,165,0,.06)}
+td{padding:10px 6px;text-align:center;white-space:nowrap}
+td:nth-child(2){text-align:left;font-weight:600;padding-left:10px;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.td-rk{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--muted);padding-left:10px;width:28px}
+.td-rk.top{color:var(--amber)}
+.td-pts{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--blue2)}
+tbody tr.own .td-pts{color:var(--amber)}
+tbody tr.own td:nth-child(2){color:var(--amber2)}
+
+/* FORM */
+.form-section{background:var(--panel);border:1px solid var(--b2);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.form-section h3{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.fgrid.full{grid-template-columns:1fr}
+label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;display:block;margin-bottom:3px}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--b1);border-radius:8px;padding:9px 10px;color:var(--white);font-size:13px;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .15s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue2)}
+input[type=date],input[type=time]{color-scheme:dark}
+.score-row{display:flex;align-items:center;gap:8px}
+.score-inp{width:60px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700}
+.colon{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--muted)}
+.btn{width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all .15s;margin-bottom:8px}
+.btn-p{background:var(--blue);color:#fff}
+.btn-p:active{background:#1558b8}
+.btn-d{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.btn-g{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.btn-sm{width:auto;padding:7px 14px;font-size:12px}
+
+/* GOOGLE SHEETS BANNER */
+.gs-banner{background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(30,111,224,.1));border:1px solid rgba(34,197,94,.3);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px}
+.gs-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.gs-text h4{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--green);margin-bottom:3px}
+.gs-text p{font-size:11px;color:var(--muted);line-height:1.5}
+.gs-status{font-size:10px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.gs-status.ok{color:var(--green)}.gs-status.warn{color:var(--amber)}.gs-status.err{color:var(--red)}
+
+/* MODAL / OVERLAY */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal h2{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
+.modal h3{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue2);margin:14px 0 8px}
+.pin-row{display:flex;gap:10px;margin-bottom:12px}
+.pin-inp{flex:1;text-align:center;font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spacing:8px}
+.modal-close{width:100%;padding:12px;background:var(--bg3);border:1px solid var(--b1);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:10px}
+.step-list{list-style:none;padding:0}
+.step-list li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--b1);font-size:12px;color:var(--text);line-height:1.5;align-items:flex-start}
+.step-list li:last-child{border-bottom:none}
+.step-n{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--amber);flex-shrink:0;min-width:18px}
+code{background:rgba(90,174,255,.1);color:var(--blue2);border-radius:4px;padding:2px 6px;font-size:11px;font-family:monospace}
+
+/* LOADING / EMPTY / TOAST */
+.loading{text-align:center;padding:48px 20px;color:var(--muted)}
+.spinner{width:36px;height:36px;border:3px solid var(--b1);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 20px}
+.empty .ei{font-size:44px;margin-bottom:12px}
+.empty p{font-size:13px;color:var(--muted);line-height:1.6}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;border-radius:25px;padding:10px 20px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toastIn .3s ease;white-space:nowrap}
+.toast.err{background:var(--red)}
+@keyframes toastIn{from{opacity:0;bottom:60px}to{opacity:1;bottom:80px}}
+.nl-btn{display:block;text-align:center;text-decoration:none;background:var(--bg3);border:1px solid var(--b2);color:var(--blue2);border-radius:10px;padding:12px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.nl-btn:active{background:var(--blue);color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.au{animation:fadeUp .25s ease both}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">HSG<br>II</div>
+  <div class="hd-info">
+    <h1>HSG Unterweser II</h1>
+    <small id="hd-sub">Regionsoberliga mJC Nord · 2025/26</small>
+  </div>
+  <div class="hd-right">
+    <div class="admin-dot" id="adminDot" style="display:none" title="Admin aktiv"></div>
+    <button class="hd-btn" id="btnPin" onclick="openPin()">🔑</button>
+    <button class="hd-btn" onclick="syncAll(true)" title="Sync">↻</button>
+  </div>
+</header>
+
+<nav id="navBar">
+  <div class="tab on"  onclick="showTab('overview',this)"><span class="ti">📋</span>Übersicht</div>
+  <div class="tab"     onclick="showTab('saison',this)"><span class="ti">📊</span>Saison</div>
+  <div class="tab"     onclick="showTab('torjaeger',this)"><span class="ti">⚽</span>Torjäger</div>
+  <div class="tab"     onclick="showTab('spielplan',this)"><span class="ti">📅</span>Spielplan</div>
+  <div class="tab"     onclick="showTab('enter',this)"><span class="ti">✏️</span>Admin</div>
+  <div class="tab"     onclick="showTab('impressum',this)"><span class="ti">ℹ️</span>Impressum</div>
+</nav>
+
+<div class="content">
+  <div class="view on pad" id="view-overview"></div>
+  <div class="view pad"    id="view-saison"></div>
+  <div class="view pad"    id="view-torjaeger"></div>
+  <div class="view pad"    id="view-spielplan"></div>
+  <div class="view pad"    id="view-enter"></div>
+  <div class="view pad"    id="view-impressum"></div>
+</div>
+
+</div><!-- /.app -->
+
+<!-- PIN MODAL -->
+<div class="overlay" id="pinModal">
+  <div class="modal">
+    <h2>🔑 Admin-Zugang</h2>
+    <p>Nur für den Mannschaftsverantwortlichen. Alle anderen Eltern sehen alle Daten — kein PIN nötig.</p>
+    <div class="pin-row">
+      <input class="pin-inp" type="password" inputmode="numeric" maxlength="6" placeholder="••••" id="pinInput" onkeydown="if(event.key==='Enter')checkPin()"/>
+      <button class="btn btn-p btn-sm" onclick="checkPin()">OK</button>
+    </div>
+    <p id="pinErr" style="color:var(--red);font-size:12px;display:none">❌ Falscher PIN</p>
+    <button class="modal-close" onclick="closeModal('pinModal')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- GOOGLE SHEETS SETUP MODAL -->
+<div class="overlay" id="gsModal">
+  <div class="modal">
+    <h2>📊 Google Sheets einrichten</h2>
+    <p>Mit Google Sheets werden deine Daten sicher in deinem eigenen Google-Konto gespeichert — für immer, unabhängig von dieser App.</p>
+    <h3>Schritt-für-Schritt</h3>
+    <ol class="step-list">
+      <li><span class="step-n">1</span>Öffne <strong>sheets.google.com</strong> und erstelle eine neue Tabelle. Nenne sie: <strong>HSG Unterweser II</strong></li>
+      <li><span class="step-n">2</span>Gehe zu <strong>Erweiterungen → Apps Script</strong></li>
+      <li><span class="step-n">3</span>Lösche den vorhandenen Code und füge den Code ein, den du per Knopfdruck kopieren kannst:</li>
+    </ol>
+    <button class="btn btn-g btn-sm" onclick="copyAppsScript()" style="width:100%;margin:8px 0">📋 Apps Script Code kopieren</button>
+    <ol class="step-list" start="4">
+      <li><span class="step-n">4</span>Klicke auf <strong>Speichern</strong>, dann auf <strong>Ausführen → doGet</strong> → Google fragt nach Berechtigung → <strong>Zulassen</strong></li>
+      <li><span class="step-n">5</span>Klicke auf <strong>Veröffentlichen → Als Web-App bereitstellen</strong> → Zugriff: <strong>Jeder</strong> → <strong>Bereitstellen</strong></li>
+      <li><span class="step-n">6</span>Kopiere die angezeigte <strong>Web-App-URL</strong> und füge sie hier ein:</li>
+    </ol>
+    <div style="margin:10px 0">
+      <label>Web-App-URL von Google</label>
+      <input type="url" id="gsUrlInput" placeholder="https://script.google.com/macros/s/…/exec"/>
+    </div>
+    <button class="btn btn-p" onclick="saveGsUrl()">✅ Google Sheets verbinden</button>
+    <button class="modal-close" onclick="closeModal('gsModal')">Später einrichten</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// KONFIGURATION
+// ═══════════════════════════════════════════════
+const ADMIN_PIN = "1967"; // ← hier kannst du den PIN ändern
+const NULIGA = {
+  meetings: "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?displayTyp=vorrunde&displayDetail=meetings&championship=HRBN+25%2F26&group=432700",
+  results:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/teamPortrait?teamtable=2118214&pageState=vorrunde&championship=HRBN+25%2F26&group=432700",
+  tabelle:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?championship=HRBN+25%2F26&group=432700&displayTyp=tabelle",
+};
+const NAME_FIX = { "Roeckt":"Rocket","Röckt":"Rocket" };
+
+// ═══════════════════════════════════════════════
+// EINGEBETTETE SPIELDATEN (Saison 2025/26)
+// ═══════════════════════════════════════════════
+const SEED = [
+  {id:"1771763002065",date:"2025-09-06",time:"14:00",round:"1. Spieltag",isHome:false,teamHome:"HSG Schwanewede/NK. II",teamAway:"HSG Unterweser II",scoreH:28,scoreA:28,venue:"Schwanewede, Heideschule",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057650&etag=cc0a448a-2ae3-44e3-9881-bede1d070471",note:"Leon 8 Tore; Alexander 5 Tore; Luca 5 Tore; Max 4 Tore; Ben 4 Tore (davon 7M 1/1); Tim 2 Tore"},
+  {id:"1771763171137",date:"2025-09-21",time:"13:00",round:"2. Spieltag",isHome:false,teamHome:"HSG Ligra",teamAway:"HSG Unterweser II",scoreH:18,scoreA:14,venue:"Lilienthal-Falkenberg, Schoofmoor I",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057720&etag=f54f9737-ac98-4749-8e57-78b17ba0381a",note:"Roeckt 7 Tore; Tim 5 Tore; Jonas 1 Tor; Ben 1 Tor"},
+  {id:"1771763336260",date:"2025-11-08",time:"14:00",round:"3. Spieltag",isHome:false,teamHome:"MSG RiGrIOs",teamAway:"HSG Unterweser II",scoreH:25,scoreA:11,venue:"Bremen-Grambke, SZ Alwin-Lonke-Str.",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057687&etag=f4fda9e5-e570-4c85-b0ec-dba01ae60395",note:"Leon 4 Tore; Tim 3 Tore; Max 1 Tor; Rocket 1 Tor; Jonas 1 Tor; Ben 1 Tor (7M 0/1)"},
+  {id:"1771763577558",date:"2025-11-16",time:"12:30",round:"4. Spieltag",isHome:false,teamHome:"MSG LEMa-HVH",teamAway:"HSG Unterweser II",scoreH:36,scoreA:25,venue:"Bremen-Lesum, VH Lesum/St. Magnus",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057649&etag=7ebe58e7-0bd3-4a60-b8e3-08c857bd64f0",note:"Leon 9 Tore (7M 0/1); Rocket 5 Tore; Max 3 Tore (7M 0/1); Luca 3 Tore (7M 0/1); Ben 3 Tore (7M 1/1); Tim 2 Tore"},
+  {id:"1771763861094",date:"2025-11-22",time:"15:00",round:"5. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"HSG Land Hadeln",scoreH:27,scoreA:44,venue:"Halle Luisenhofe, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057697&etag=0dfe4b94-5e8b-4e72-9e50-2819deda654c",note:"Leon 9 (7M 2/2); Rocket 5 Tore; Mats 5 Tore (7M 1/1); Tim 4 Tore; Max 2 Tore; Jonas 2 Tore"},
+  {id:"1771764066777",date:"2025-11-29",time:"11:00",round:"6. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"HG Bremerhaven",scoreH:19,scoreA:41,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057699&etag=025e0020-975a-439d-8b73-6e8ba7884e08",note:"Leon 5 Tore (7M 0/1); Rocket 5 Tore (7M 0/2); Tim 4 Tore; Nils 2 Tore; Jonas 2 Tore; Luca 1 Tor (7M 0/1)"},
+  {id:"1771764290942",date:"2025-12-06",time:"14:30",round:"7. Spieltag",isHome:false,teamHome:"JSG TVL/LTS/Spaden",teamAway:"HSG Unterweser II",scoreH:35,scoreA:9,venue:"Bremerhaven-Leherheide, Hans-Gabrich-Halle",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057629&etag=dd3d071d-dac3-498d-b76a-7ecf25789cb1",note:"Rocket 3 Tore; Ben 3 Tore (7M 1/1); Jonas 2 Tore; Tim 1 Tor"},
+  {id:"1771764536287",date:"2026-01-24",time:"14:30",round:"8. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"HSG LiGra",scoreH:21,scoreA:28,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057684&etag=e5258905-38ce-4688-bef3-f6ce9eb0a2f7",note:"Leon 6 Tore (7M 1/1); Max 4 Tore; Tim 4 Tore; Rocket 3 Tore; Ben 2 Tore; Luca 1 Tor; Jonas 1 Tor (7M 1/3)"},
+  {id:"1771764697194",date:"2026-02-14",time:"12:45",round:"9. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"Hagener SV",scoreH:30,scoreA:27,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057638&etag=18752851-b810-41fb-bddf-90c366430088",note:"Max 9 Tore; Leon 9 Tore; Rocket 6 Tore; Luca 5 Tore; Ben 1 Tor"},
+  {id:"1771764924664",date:"2026-02-22",time:"10:00",round:"10. Spieltag",isHome:false,teamHome:"HG Bremerhaven",teamAway:"HSG Unterweser II",scoreH:29,scoreA:25,venue:"Bremerhaven-Leherheide",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057601&etag=1a222e52-f810-49de-b397-ea42f3f71e7c",note:"Max 8 Tore; Leon 5 Tore (7M 0/1); Rocket 5 Tore; Tim 4 Tore; Luca 2 Tore; Ben 1 Tor (7M 0/1)"},
+  {id:"1771765073554",date:"2026-02-27",time:"17:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"HSG Schwanewede/NK. II",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
+  {id:"1771765155794",date:"2026-03-01",time:"14:15",round:"12. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser II",venue:"Hagen, SH Schulzentrum",pdf:"",note:""},
+  {id:"1771765268746",date:"2026-03-07",time:"14:00",round:"13. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"MSG RiGrOs",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
+  {id:"1771765440944",date:"2026-03-15",time:"12:45",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"MSG LeMa-HVH",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
+  {id:"1771765522621",date:"2026-04-11",time:"16:30",round:"15. Spieltag",isHome:false,teamHome:"HSG Land Hadeln",teamAway:"HSG Unterweser II",venue:"Otterndorf, SH Schulzentrum",pdf:"",note:""},
+  {id:"1771765631051",date:"2026-04-18",time:"13:15",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser II",teamAway:"JSG TVL/LTS/Spaden",venue:"Großsporthalle, Rodenkirchen",pdf:"",note:""},
+];
+
+// ═══════════════════════════════════════════════
+// APP-ZUSTAND
+// ═══════════════════════════════════════════════
+let STATE = {
+  games: [],
+  ownRank: 9,
+  isAdmin: false,
+  gsUrl: "https://script.google.com/macros/s/AKfycbxRRIvjGYSmdwyX70JvjHlOOKHdTiJUk0se1ef-mthxspINOFKRN5R6OSfVd9PmC6L_SQ/exec",
+  gsConnected: true,
+  editId: null,
+  activeTab: "overview",
+};
+
+// ═══════════════════════════════════════════════
+// LOKALER SPEICHER (Fallback wenn kein GSheets)
+// ═══════════════════════════════════════════════
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════════════
+async function gsRead() {
+  if (!STATE.gsUrl) return null;
+
+  // Methode 1: normales fetch (funktioniert auf Android/Chrome)
+  try {
+    const r = await fetch(STATE.gsUrl + "?action=read", {
+      method: "GET",
+      signal: AbortSignal.timeout(7000),
+    });
+    const d = await r.json();
+    if (d && d.ok) return d.data;
+  } catch(e) { /* weiter zu Methode 2 */ }
+
+  // Methode 2: JSONP via Script-Tag (Fallback für iOS Safari)
+  return new Promise((resolve) => {
+    const cb = "cb_" + Date.now();
+    const script = document.createElement("script");
+    const timer = setTimeout(() => {
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(null);
+    }, 8000);
+    window[cb] = (data) => {
+      clearTimeout(timer);
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(data && data.ok ? data.data : null);
+    };
+    script.src = STATE.gsUrl + "?action=read&callback=" + cb;
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[cb];
+      resolve(null);
+    };
+    document.body.appendChild(script);
+  });
+}
+
+async function gsWrite(data) {
+  if (!STATE.gsUrl) return false;
+  try {
+    // Schreiben via fetch mit redirect follow — Apps Script akzeptiert das
+    await fetch(STATE.gsUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "write", data }),
+    });
+    return true;
+  } catch {
+    // Fallback: auch no-cors versuchen
+    try {
+      await fetch(STATE.gsUrl, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "write", data }),
+      });
+      return true;
+    } catch { return false; }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SYNC: lädt Daten aus GSheets oder localStorage
+// ═══════════════════════════════════════════════
+async function syncAll(showMsg = false) {
+  // Google Sheets URL ist fest eingebaut — immer verbunden
+  STATE.gsConnected = true;
+
+  let data = await gsRead();
+  if (data) {
+    // Daten aus Google Sheets laden
+    STATE.games   = (data.games && data.games.length > 0) ? data.games : SEED;
+    STATE.ownRank = data.ownRank ?? 9;
+    // Erster Start: Seed-Daten in Sheets hochladen wenn noch leer
+    if (!data.games || data.games.length === 0) {
+      await gsWrite({ games: SEED, ownRank: 9 });
+      if (showMsg) toast("✅ 16 Spiele in Google Sheets gespeichert!");
+    } else {
+      if (showMsg) toast("✅ Daten aus Google Sheets geladen");
+    }
+    // Lokalen Cache aktualisieren
+    LS.set("hsg_games_cache", STATE.games);
+    LS.set("hsg_rank_cache",  STATE.ownRank);
+  } else {
+    // Google Sheets nicht erreichbar → lokaler Cache als Fallback
+    if (showMsg) toast("⚠️ Google Sheets offline – lokale Daten", true);
+    STATE.games   = LS.get("hsg_games_cache") || SEED;
+    STATE.ownRank = LS.get("hsg_rank_cache")  ?? 9;
+  }
+  renderActive();
+}
+
+async function saveAll() {
+  LS.set("hsg_games", STATE.games);
+  LS.set("hsg_rank", STATE.ownRank);
+  if (STATE.gsUrl) {
+    const ok = await gsWrite({ games: STATE.games, ownRank: STATE.ownRank });
+    if (!ok) toast("⚠️ Google Sheets Sync fehlgeschlagen", true);
+    else LS.set("hsg_games_cache", STATE.games);
+  }
+  renderActive();
+}
+
+// ═══════════════════════════════════════════════
+// HILFSFUNKTIONEN
+// ═══════════════════════════════════════════════
+const DAYS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MONTHS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+function fmtDate(iso){if(!iso)return'–';const d=new Date(iso+'T12:00');return`${DAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS[d.getMonth()]}`;}
+function countdown(iso,t){const dt=new Date(`${iso}T${t||'12:00'}`);const diff=dt-new Date();if(diff<=0)return null;return{d:Math.floor(diff/86400000),h:Math.floor(diff%86400000/3600000),m:Math.floor(diff%3600000/60000)};}
+function getResult(g){const h=+g.scoreH,a=+g.scoreA;if(isNaN(h)||isNaN(a)||g.scoreH===undefined)return null;const own=g.isHome?h:a,opp=g.isHome?a:h;return own>opp?'win':own<opp?'loss':'draw';}
+const RES_LBL={win:'SIEG ✓',loss:'NIEDERLAGE',draw:'UNENTSCHIEDEN'};
+const today=()=>new Date().toISOString().slice(0,10);
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function fixName(n){return NAME_FIX[n]||n;}
+
+function toast(msg, err=false){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast'+(err?' err':'');
+  el.style.display='block';
+  clearTimeout(window._toastT);
+  window._toastT=setTimeout(()=>el.style.display='none',2800);
+}
+
+// ═══════════════════════════════════════════════
+// TORJÄGER-PARSING
+// ═══════════════════════════════════════════════
+function parseScorers(games) {
+  const P = {};
+  games.forEach(g => {
+    if (!g.note || g.scoreH === undefined) return;
+    const seen = new Set();
+    g.note.split(';').map(e=>e.trim()).filter(Boolean).forEach(entry => {
+      const m = entry.match(/^([A-ZÄÖÜa-zäöü]+)\s+(\d+)/);
+      if (!m) return;
+      const name = fixName(m[1]);
+      const tore = +m[2];
+      const m7 = entry.match(/7M\s+(\d+)\/(\d+)/);
+      const t7 = m7 ? +m7[1] : 0, v7 = m7 ? +m7[2] : 0;
+      if (!P[name]) P[name] = {tore:0,spiele:0,m7t:0,m7v:0,games:[]};
+      P[name].tore += tore; P[name].m7t += t7; P[name].m7v += v7;
+      P[name].games.push(tore);
+      if (!seen.has(name)) { P[name].spiele++; seen.add(name); }
+    });
+  });
+  return Object.entries(P).map(([name,d])=>({
+    name, tore:d.tore, spiele:d.spiele,
+    m7t:d.m7t, m7v:d.m7v,
+    avg:(d.tore/Math.max(d.spiele,1)).toFixed(1),
+    best:Math.max(...d.games,0),
+  })).sort((a,b)=>b.tore-a.tore);
+}
+
+// ═══════════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════════
+function gameCardHTML(g, showActions=false) {
+  const res = getResult(g);
+  const cls = res || (g.scoreH===undefined?'future':'draw');
+  const ownH = g.isHome;
+  const actBtns = showActions && STATE.isAdmin ? `
+    <button class="pdf-btn edit" onclick="startEdit('${g.id}')">✏️ Bearbeiten</button>
+    <button class="pdf-btn del" onclick="deleteGame('${g.id}')">🗑️</button>` : '';
+  return `<div class="gc ${cls} au">
+    <div class="bar"></div>
+    <div class="gc-top">
+      <span class="gc-round">${g.round||'Spieltag'}</span>
+      <span class="gc-date">${fmtDate(g.date)}${g.time?' · '+g.time+' Uhr':''}</span>
+    </div>
+    <div class="gc-teams">
+      <div class="gc-tn${ownH?' own':''}">${g.teamHome||'–'}</div>
+      <div class="gc-sc">${g.scoreH!==undefined?`<b>${g.scoreH}:${g.scoreA}</b>`:`<span class="gc-vs">VS</span>`}</div>
+      <div class="gc-tn right${!ownH?' own':''}">${g.teamAway||'–'}</div>
+    </div>
+    <div class="gc-foot">
+      ${res?`<span class="chip ${res}">${RES_LBL[res]}</span>`:''}
+      ${ownH?'<span class="chip home">🏠 Heim</span>':'<span class="chip away">✈️ Auswärts</span>'}
+      ${g.venue?`<span style="font-size:10px;color:var(--muted)">📍 ${g.venue}</span>`:''}
+      ${g.pdf?`<a class="pdf-btn" href="${g.pdf}" target="_blank">📄 PDF Spielbericht</a>`:''}
+      ${actBtns}
+    </div>
+    ${g.note?`<div class="gc-note">📝 ${g.note}</div>`:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// ÜBERSICHT
+// ═══════════════════════════════════════════════
+function renderOverview() {
+  const gs = STATE.games.sort((a,b)=>a.date<b.date?-1:1);
+  const td = today();
+  const past = gs.filter(g=>g.date<td||(g.date===td&&g.scoreH!==undefined));
+  const future = gs.filter(g=>!past.includes(g));
+  const wins=past.filter(g=>getResult(g)==='win').length;
+  const losses=past.filter(g=>getResult(g)==='loss').length;
+  const goalsFor=past.reduce((s,g)=>s+(g.isHome?(g.scoreH||0):(g.scoreA||0)),0);
+  const next=future[0]||null;
+  const last=past.length?past[past.length-1]:null;
+  const cd=next?countdown(next.date,next.time):null;
+
+  let h=`<div class="hero au">
+    <div class="hero-top">
+      <div><div class="hero-title">Saison 2025/26</div><div class="hero-sub">Regionsoberliga mJC Nord</div></div>
+      <div class="rank-ring"><div class="rank-n">${STATE.ownRank}</div><div class="rank-l">Rang</div></div>
+    </div>
+    <div class="stats">
+      <div class="sbox"><div class="sn b">${past.length}</div><div class="sl">Gespielt</div></div>
+      <div class="sbox"><div class="sn g">${wins}</div><div class="sl">Siege</div></div>
+      <div class="sbox"><div class="sn r">${losses}</div><div class="sl">Niederlagen</div></div>
+      <div class="sbox"><div class="sn a">${goalsFor}</div><div class="sl">Tore für</div></div>
+    </div>
+  </div>`;
+
+  if(next){
+    h+=`<div class="nm au">
+      <div class="nm-lbl">⚡ Nächstes Spiel</div>
+      <div class="nm-row">
+        <div class="nm-tn${next.isHome?' own':''}">${next.teamHome}</div>
+        <div class="nm-vs">VS</div>
+        <div class="nm-tn right${!next.isHome?' own':''}">${next.teamAway}</div>
+      </div>
+      <div class="nm-meta">
+        <span>📅 ${fmtDate(next.date)}</span>
+        ${next.time?`<span>🕐 ${next.time} Uhr</span>`:''}
+        ${next.isHome?'<span>🏠 Heimspiel</span>':'<span>✈️ Auswärtsspiel</span>'}
+        ${next.venue?`<span>📍 ${next.venue}</span>`:''}
+      </div>
+      ${cd?`<div class="cd">
+        <div class="cdb"><div class="cdn">${cd.d}</div><div class="cdl">Tage</div></div>
+        <div class="cdb"><div class="cdn">${cd.h}</div><div class="cdl">Stunden</div></div>
+        <div class="cdb"><div class="cdn">${cd.m}</div><div class="cdl">Minuten</div></div>
+      </div>`:''}
+    </div>`;
+  }
+
+  if(last){h+=`<div class="shdr">Letztes Ergebnis</div>${gameCardHTML(last)}`;}
+
+  // Google Sheets Status
+  h+=`<div class="shdr">Datenspeicherung</div>
+  <div class="gs-banner">
+    <div class="gs-icon">${STATE.gsConnected?'📊':'💾'}</div>
+    <div class="gs-text">
+      <h4>${STATE.gsConnected?'Google Sheets verbunden':'Nur lokaler Speicher'}</h4>
+      <p>${STATE.gsConnected?'Deine Daten sind sicher in Google Sheets gespeichert und für alle Eltern sichtbar.':'Daten liegen nur auf diesem Gerät. Verbinde Google Sheets für geteilten Zugriff.'}</p>
+      ${!STATE.gsConnected&&STATE.isAdmin?`<button class="btn btn-g btn-sm" onclick="openModal('gsModal')" style="margin-top:8px">📊 Google Sheets einrichten</button>`:''}
+    </div>
+  </div>`;
+
+  h+=`<div class="shdr">nuLiga direkt</div>
+  <a class="nl-btn" href="${NULIGA.meetings}" target="_blank">📅 Spielplan auf nuLiga</a>
+  <a class="nl-btn" href="${NULIGA.results}"  target="_blank">⚽ Ergebnisse auf nuLiga</a>
+  <a class="nl-btn" href="${NULIGA.tabelle}"  target="_blank">📊 Tabelle auf nuLiga</a>`;
+
+  document.getElementById('view-overview').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════
+// SAISON
+// ═══════════════════════════════════════════════
+function renderSaison() {
+  const gs = [...STATE.games].sort((a,b)=>a.date<b.date?-1:1);
+  const td = today();
+  const past = gs.filter(g=>g.date<td||(g.date===td&&g.scoreH!==undefined));
+  const future = gs.filter(g=>!past.includes(g));
+  const wins=past.filter(g=>getResult(g)==='win').length;
+  const draws=past.filter(g=>getResult(g)==='draw').length;
+  const losses=past.filter(g=>getResult(g)==='loss').length;
+  const pts=wins*2+draws;
+  const gFor=past.reduce((s,g)=>s+(g.isHome?(g.scoreH||0):(g.scoreA||0)),0);
+  const gAg=past.reduce((s,g)=>s+(g.isHome?(g.scoreA||0):(g.scoreH||0)),0);
+
+  let h='';
+  if(past.length){
+    h+=`<div class="hero au">
+      <div class="stats3">
+        <div class="sbox"><div class="sn g">${wins}</div><div class="sl">Siege</div></div>
+        <div class="sbox"><div class="sn">${draws}</div><div class="sl">Remis</div></div>
+        <div class="sbox"><div class="sn r">${losses}</div><div class="sl">Niederlagen</div></div>
+      </div><div style="height:6px"></div>
+      <div class="stats3">
+        <div class="sbox"><div class="sn a">${pts}</div><div class="sl">Punkte</div></div>
+        <div class="sbox"><div class="sn">${gFor}</div><div class="sl">Tore für</div></div>
+        <div class="sbox"><div class="sn">${gAg}</div><div class="sl">Tore gegen</div></div>
+      </div>
+    </div>`;
+    h+=`<div class="shdr">Ergebnisse (${past.length} Spiele)</div>`;
+    [...past].reverse().forEach(g=>{ h+=gameCardHTML(g,true); });
+  }
+  if(future.length){
+    h+=`<div class="shdr">Kommende Spiele (${future.length})</div>`;
+    future.forEach(g=>{ h+=gameCardHTML(g,true); });
+  }
+  if(!gs.length) h=`<div class="empty"><div class="ei">📊</div><p>Noch keine Spiele vorhanden.</p></div>`;
+  document.getElementById('view-saison').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════
+// TORJÄGER
+// ═══════════════════════════════════════════════
+function renderTorjaeger() {
+  const td=today();
+  const past=STATE.games.filter(g=>g.date<td||(g.date===td&&g.scoreH!==undefined));
+  const scorers=parseScorers(past);
+  const totalTeam=past.reduce((s,g)=>s+(g.isHome?(g.scoreH||0):(g.scoreA||0)),0);
+  const maxT=scorers[0]?.tore||1;
+  const m7All=scorers.reduce((s,p)=>s+p.m7v,0);
+  const m7Hit=scorers.reduce((s,p)=>s+p.m7t,0);
+  const medals=['#f5a623','#94a3b8','#cd7f32'];
+
+  if(!scorers.length){
+    document.getElementById('view-torjaeger').innerHTML=`<div class="empty"><div class="ei">⚽</div><p>Noch keine Torschützen erfasst.</p></div>`;
+    return;
+  }
+
+  let h=`<div class="hero au">
+    <div class="hero-top">
+      <div><div class="hero-title">Torjäger · Saison 2025/26</div><div class="hero-sub">${scorers.length} Schützen · ${past.length} Spiele</div></div>
+      <div style="text-align:right"><div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:var(--amber);line-height:1">${totalTeam}</div><div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Team-Tore</div></div>
+    </div>
+    <div class="stats3">
+      <div class="sbox"><div class="sn a">${scorers[0]?.tore}</div><div class="sl">Top-Scorer</div></div>
+      <div class="sbox"><div class="sn b">${m7All}</div><div class="sl">7M gesamt</div></div>
+      <div class="sbox"><div class="sn g">${m7All>0?Math.round(m7Hit/m7All*100)+'%':'–'}</div><div class="sl">7M-Quote</div></div>
+    </div>
+  </div>
+  <div class="shdr">Rangliste</div>`;
+
+  scorers.forEach((p,i)=>{
+    const bar=Math.round(p.tore/maxT*100);
+    const col=i<3?medals[i]:'var(--blue)';
+    const rankCol=i<3?medals[i]:'var(--muted)';
+    const m7txt=p.m7v>0?`${p.m7t}/${p.m7v} (${Math.round(p.m7t/p.m7v*100)}%)`:'–';
+    h+=`<div class="gc au" style="animation-delay:${i*.04}s">
+      <div class="bar" style="background:${rankCol}"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:${rankCol};min-width:24px;flex-shrink:0">${i+1}</div>
+        <div style="flex:1">
+          <div style="font-family:Rajdhani,sans-serif;font-size:17px;font-weight:700;color:var(--white);line-height:1">${p.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${p.spiele} Spiele · Ø ${p.avg} · Best: ${p.best}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:Rajdhani,sans-serif;font-size:26px;font-weight:700;color:${rankCol};line-height:1">${p.tore}</div>
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Tore</div>
+        </div>
+      </div>
+      <div style="height:4px;background:var(--b1);border-radius:2px;margin-bottom:8px;overflow:hidden">
+        <div style="height:100%;width:${bar}%;background:${col};border-radius:2px;transition:width .5s ease"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:10px;color:var(--muted)">Anteil: <strong style="color:var(--white)">${Math.round(p.tore/totalTeam*100)}%</strong></span>
+        ${p.m7v>0?`<span style="font-size:10px;font-family:Rajdhani,sans-serif;font-weight:700;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);color:var(--amber);border-radius:6px;padding:2px 7px">7M: ${m7txt}</span>`:''}
+      </div>
+    </div>`;
+  });
+
+  // 7M-Tabelle
+  const m7players=scorers.filter(p=>p.m7v>0).sort((a,b)=>(b.m7t/b.m7v)-(a.m7t/a.m7v));
+  if(m7players.length){
+    h+=`<div class="shdr">7M-Spezialisten</div><div class="card">`;
+    m7players.forEach((p,i)=>{
+      const q=p.m7t/p.m7v;
+      const col=q>=.7?'var(--green)':q>=.4?'var(--amber)':'var(--red)';
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;${i<m7players.length-1?'border-bottom:1px solid var(--b1)':''}">
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:var(--white);flex:1">${p.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${p.m7t}/${p.m7v} Versuche</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700;color:${col};min-width:42px;text-align:right">${Math.round(q*100)}%</div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
+  document.getElementById('view-torjaeger').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════
+// SPIELPLAN
+// ═══════════════════════════════════════════════
+function renderSpielplan() {
+  document.getElementById('view-spielplan').innerHTML=`
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Tippe auf einen der Links — die offizielle nuLiga-Seite öffnet sich in deinem Browser.</p>
+    <a class="nl-btn" href="${NULIGA.meetings}" target="_blank" style="padding:16px;font-size:15px">📅 Spielplan (alle Spiele)</a>
+    <a class="nl-btn" href="${NULIGA.results}"  target="_blank" style="padding:16px;font-size:15px">⚽ Ergebnisse</a>
+    <a class="nl-btn" href="${NULIGA.tabelle}"  target="_blank" style="padding:16px;font-size:15px">📊 Tabelle</a>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN / EINGABE
+// ═══════════════════════════════════════════════
+function renderImpressum() {
+  document.getElementById('view-impressum').innerHTML = `
+
+    <!-- EINWILLIGUNGSHINWEIS -->
+    <div class="shdr" style="margin-top:4px">Wichtiger Hinweis</div>
+    <div class="card au" style="border-color:var(--amber);box-shadow:0 0 20px rgba(240,165,0,.12)">
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+        <div style="font-size:28px;flex-shrink:0">👨‍👩‍👧‍👦</div>
+        <div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:4px">Hinweis zur Erfassung von Spielerdaten</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.7">In dieser App werden <strong style="color:var(--white)">Vornamen von Nachwuchsspielern</strong> zusammen mit Spielstatistiken (Tore, 7-Meter) erfasst und für alle Nutzer dieser App sichtbar dargestellt.</div>
+        </div>
+      </div>
+
+      ${[
+        { icon:"✅", titel:"Zweck der Erfassung", text:"Die Daten dienen ausschließlich der internen Mannschaftskommunikation — Eltern, Trainer und Spieler der HSG Unterweser II sollen Spielstatistiken einfach einsehen können." },
+        { icon:"👥", titel:"Wer sieht die Daten?", text:"Nur Personen, die den App-Link erhalten haben. Der Link wird ausschließlich innerhalb der Mannschaftsgemeinschaft geteilt. Die App ist nicht öffentlich im Internet auffindbar." },
+        { icon:"🔒", titel:"Datensicherheit", text:"Die Daten werden in Google Sheets gespeichert, das nur dem App-Betreiber NBoeger zugänglich ist. Der Betreiber ist Privatperson ohne Vereinszugehörigkeit. Dritte haben keinen Zugriff auf die Rohdaten." },
+        { icon:"❌", titel:"Widerspruchsrecht (Opt-out)", text:"Wenn du als Erziehungsberechtigter nicht möchtest, dass der Vorname deines Kindes in der App erscheint, hast du jederzeit das Recht auf Widerspruch. Schreibe einfach eine E-Mail — der Name wird umgehend entfernt oder anonymisiert." },
+      ].map((s,i,arr) => `
+        <div style="display:flex;gap:12px;padding:10px 0;${i<arr.length-1?'border-top:1px solid var(--b1)':'border-top:1px solid var(--b1)'}">
+          <div style="font-size:18px;flex-shrink:0;margin-top:1px">${s.icon}</div>
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--white);margin-bottom:3px">${s.titel}</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.7">${s.text}</div>
+          </div>
+        </div>`).join('')}
+
+      <div style="margin-top:12px;padding:12px;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.2);border-radius:10px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Widerspruch oder Fragen zum Datenschutz:</div>
+        <a href="mailto:nboeger.nb@gmail.com?subject=Datenschutz%20HSG%20Unterweser%20App&body=Hallo%2C%0A%0Aich%20widerspreche%20der%20Erfassung%20folgender%20Daten%20in%20der%20HSG%20Unterweser%20App%3A%0A%0AName%20des%20Spielers%3A%20%0A%0AMit%20freundlichen%20Gr%C3%BC%C3%9Fen" style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--amber);text-decoration:none;letter-spacing:.5px">✉️ nboeger.nb@gmail.com</a>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">Tippen öffnet direkt eine vorbereitete E-Mail</div>
+      </div>
+    </div>
+
+    <!-- IMPRESSUM -->
+    <div class="shdr" style="margin-top:4px">Impressum</div>
+    <div class="card au">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:10px">Angaben gemäß § 5 TMG</div>
+      <div style="font-size:13px;color:var(--white);font-weight:600;margin-bottom:4px">NBoeger</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8">
+        Privatperson · Vater eines Spielers der HSG Unterweser II<br>
+        Kein Vereinsmitglied · Keine offizielle Funktion im Verein
+      </div>
+      <div style="margin-top:10px;padding:10px;background:rgba(90,174,255,.06);border:1px solid rgba(90,174,255,.15);border-radius:8px">
+        <div style="font-size:11px;color:var(--text);line-height:1.7">Diese App ist ein <strong style="color:var(--white)">privates, ehrenamtliches Angebot</strong> ohne Vereinszugehörigkeit. Sie wurde entwickelt um Trainer, Spieler und Eltern der HSG Unterweser II mit einem einfachen mobilen Zugriff auf Spielergebnisse, Termine und Statistiken zu unterstützen. Es besteht keine offizielle Verbindung zum Verein HSG Unterweser oder zum Handball-Verband.</div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;margin-bottom:6px">Kontakt</div>
+        <a href="mailto:nboeger.nb@gmail.com" style="font-size:12px;color:var(--blue2);text-decoration:none">nboeger.nb@gmail.com</a>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;margin-bottom:6px">Hinweis</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">Diese App ist ein nicht-kommerzielles, privates Informationsangebot ausschließlich für Eltern, Trainer und Spieler der HSG Unterweser II. Sie dient der internen Kommunikation rund um den Spielbetrieb.</div>
+      </div>
+    </div>
+
+    <!-- DATENSCHUTZ -->
+    <div class="shdr">Datenschutzerklärung</div>
+    <div class="card au" style="animation-delay:.05s">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:10px">Gemäß DSGVO (EU) 2016/679</div>
+
+      ${[
+        {
+          titel: "1. Verantwortliche Person",
+          text: "Verantwortlich im Sinne der DSGVO ist NBoeger, erreichbar unter nboeger.nb@gmail.com. Diese App wird privat und ehrenamtlich betrieben. Der Betreiber ist Privatperson und Vater eines Spielers der HSG Unterweser II — kein Vereinsmitglied und ohne offizielle Funktion im Verein oder Verband."
+        },
+        {
+          titel: "2. Welche Daten werden gespeichert?",
+          text: "Diese App speichert ausschließlich Handball-Spieldaten: Spieltermine, Spielorte, Ergebnisse, Torschützenlisten sowie Links zu offiziellen Spielberichten (PDF) der nuLiga. Es werden keine personenbezogenen Daten der App-Nutzer (Eltern, Trainer, Zuschauer) erfasst, gespeichert oder verarbeitet."
+        },
+        {
+          titel: "3. Spielerdaten (Torschützenlisten)",
+          text: "In den Spielnotizen werden Vornamen von Nachwuchsspielern zusammen mit Torangaben erfasst. Diese Daten sind ausschließlich für den internen Gebrauch der Mannschaftsgemeinschaft bestimmt und werden nur an Personen weitergegeben, die den App-Link erhalten. Die Erfassung erfolgt auf Basis des berechtigten Interesses gemäß Art. 6 Abs. 1 lit. f DSGVO im Rahmen des Sportbetriebs."
+        },
+        {
+          titel: "4. Datenspeicherung – Google Sheets",
+          text: "Die Spieldaten werden in Google Sheets (Google Ireland Ltd., Gordon House, Barrow Street, Dublin 4, Irland) gespeichert. Google verarbeitet diese Daten gemäß seiner eigenen Datenschutzrichtlinie. Es handelt sich ausschließlich um Spieldaten ohne personenbezogene Nutzerinformationen. Weitere Infos: policies.google.com/privacy"
+        },
+        {
+          titel: "5. Lokaler Speicher (Cache)",
+          text: "Die App speichert Spieldaten temporär im lokalen Speicher (localStorage) des verwendeten Geräts. Dieser dient ausschließlich als Offline-Fallback und enthält keine personenbezogenen Daten. Der Cache kann jederzeit durch Löschen der Browser-Daten entfernt werden."
+        },
+        {
+          titel: "6. Keine Weitergabe an Dritte",
+          text: "Spieldaten werden nicht an Dritte verkauft, vermietet oder für Werbezwecke genutzt. Eine Weitergabe erfolgt ausschließlich innerhalb der Mannschaftsgemeinschaft über den App-Link."
+        },
+        {
+          titel: "7. Keine Tracking- oder Analyse-Tools",
+          text: "Diese App verwendet keine Cookies, kein Google Analytics, kein Facebook Pixel und keine sonstigen Tracking- oder Analyse-Werkzeuge. Es werden keine Nutzungsprofile erstellt."
+        },
+        {
+          titel: "8. Betroffenenrechte",
+          text: "Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner Daten (Art. 15–18 DSGVO). Anfragen bitte per E-Mail an nboeger.nb@gmail.com. Beschwerden können bei der zuständigen Datenschutzaufsichtsbehörde eingereicht werden."
+        },
+        {
+          titel: "9. Externe Links",
+          text: "Die App enthält Links zur offiziellen nuLiga-Website (hvnb-handball.liga.nu) sowie zu PDF-Spielberichten. Für die Inhalte dieser externen Seiten übernehmen wir keine Haftung. Es gelten die jeweiligen Datenschutzbestimmungen der verlinkten Anbieter."
+        },
+        {
+          titel: "10. Änderungen dieser Erklärung",
+          text: "Diese Datenschutzerklärung kann bei Bedarf aktualisiert werden. Die jeweils aktuelle Version ist in der App hinterlegt."
+        }
+      ].map((s,i) => `
+        <div style="padding:10px 0;${i>0?'border-top:1px solid var(--b1)':''}">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--white);margin-bottom:4px">${s.titel}</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.7">${s.text}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- TECHNIK -->
+    <div class="shdr">Technische Informationen</div>
+    <div class="card au" style="animation-delay:.1s">
+      ${[
+        ["App-Version",   "4.0 – HSG Unterweser II"],
+        ["Entwickler",    "NBoeger"],
+        ["Technologie",   "HTML5 · Vanilla JavaScript · CSS3"],
+        ["Datenspeicher", "Google Sheets (Google Ireland Ltd.)"],
+        ["Offline-Cache", "Browser localStorage (nur Spieldaten)"],
+        ["Lizenz",        "Privat · Nicht-kommerziell"],
+        ["Stand",         "Februar 2026"],
+      ].map(([k,v],i,arr) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;${i<arr.length-1?'border-bottom:1px solid var(--b1)':''}">
+          <span style="font-size:11px;color:var(--muted)">${k}</span>
+          <span style="font-size:11px;color:var(--white);font-weight:600;text-align:right;max-width:60%">${v}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function renderEnter() {
+  const ed = STATE.editId ? STATE.games.find(g=>g.id===STATE.editId) : null;
+  const f = ed || {date:'',time:'17:00',round:'',isHome:true,teamHome:'HSG Unterweser II',teamAway:'',scoreH:'',scoreA:'',venue:'',pdf:'',note:''};
+
+  let h='';
+
+  if(!STATE.isAdmin){
+    h=`<div class="empty"><div class="ei">🔒</div>
+      <p style="margin-bottom:20px">Nur für den Admin (Mannschaftsverantwortlichen).<br>Alle anderen sehen alle Daten — kein Login nötig.</p>
+      <button class="btn btn-p" style="width:auto;padding:10px 28px" onclick="openPin()">🔑 Admin-PIN eingeben</button>
+    </div>`;
+    // Spiele trotzdem anzeigen
+    const gs=[...STATE.games].sort((a,b)=>a.date>b.date?-1:1);
+    if(gs.length){h+=`<div class="shdr">Alle Spiele (${gs.length})</div>`;gs.forEach(g=>{h+=gameCardHTML(g,false);});}
+    document.getElementById('view-enter').innerHTML=h; return;
+  }
+
+  // Tabellenplatz
+  h+=`<div class="form-section au">
+    <h3>📊 Tabellenplatz</h3>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:var(--muted);flex:1">Aktueller Rang:</span>
+      <input type="number" min="1" max="20" value="${STATE.ownRank}" id="rankInput"
+        style="width:70px;text-align:center;font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700"
+        onchange="updateRank(this.value)"/>
+      <span style="font-size:12px;color:var(--muted)">/ 10</span>
+    </div>
+  </div>`;
+
+  // Google Sheets
+  if(!STATE.gsConnected){
+    h+=`<div class="gs-banner au">
+      <div class="gs-icon">⚠️</div>
+      <div class="gs-text">
+        <h4>Google Sheets nicht verbunden</h4>
+        <p>Daten werden nur lokal auf diesem Gerät gespeichert. Andere Eltern sehen keine Änderungen.</p>
+        <button class="btn btn-g btn-sm" onclick="openModal('gsModal')" style="margin-top:8px">📊 Jetzt einrichten</button>
+      </div>
+    </div>`;
+  } else {
+    h+=`<div class="gs-banner au">
+      <div class="gs-icon">📊</div>
+      <div class="gs-text">
+        <h4 style="color:var(--green)">Google Sheets verbunden ✓</h4>
+        <p>Daten werden automatisch synchronisiert. Alle Eltern sehen deine Eingaben sofort.</p>
+      </div>
+    </div>`;
+  }
+
+  // Formular
+  h+=`<div class="form-section au" id="gameForm">
+    <h3>${ed?'✏️ Spiel bearbeiten':'➕ Spiel eintragen'}</h3>
+    <div class="fgrid">
+      <div><label>Datum *</label><input type="date" id="f_date" value="${f.date}"/></div>
+      <div><label>Uhrzeit</label><input type="time" id="f_time" value="${f.time||'17:00'}"/></div>
+    </div>
+    <div class="fgrid">
+      <div><label>Spieltag / Runde</label><input type="text" id="f_round" value="${f.round||''}" placeholder="5. Spieltag"/></div>
+      <div><label>Heimspiel?</label>
+        <select id="f_home">
+          <option value="1" ${f.isHome?'selected':''}>✅ Heimspiel</option>
+          <option value="0" ${!f.isHome?'selected':''}>✈️ Auswärtsspiel</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgrid">
+      <div><label>Heimteam *</label><input type="text" id="f_th" value="${f.teamHome||''}" placeholder="Heimteam"/></div>
+      <div><label>Auswärtsteam *</label><input type="text" id="f_ta" value="${f.teamAway||''}" placeholder="Auswärtsteam"/></div>
+    </div>
+    <div class="fgrid">
+      <div><label>Ergebnis (leer = offen)</label>
+        <div class="score-row">
+          <input class="score-inp" type="number" min="0" max="99" id="f_sh" placeholder="–" value="${f.scoreH!==undefined?f.scoreH:''}"/>
+          <span class="colon">:</span>
+          <input class="score-inp" type="number" min="0" max="99" id="f_sa" placeholder="–" value="${f.scoreA!==undefined?f.scoreA:''}"/>
+        </div>
+      </div>
+      <div><label>Spielort / Halle</label><input type="text" id="f_venue" value="${f.venue||''}" placeholder="Halle Einswarden"/></div>
+    </div>
+    <div class="fgrid full"><div><label>📄 PDF-Link (Spielbericht)</label><input type="url" id="f_pdf" value="${f.pdf||''}" placeholder="https://…"/></div></div>
+    <div class="fgrid full"><div><label>📝 Torschützen (Format: Name Tore; Name Tore (7M x/y))</label><input type="text" id="f_note" value="${f.note||''}" placeholder="Leon 5 Tore; Max 3 Tore (7M 1/1); Tim 2 Tore"/></div></div>
+    <button class="btn btn-p" onclick="saveGame()">${ed?'💾 Änderungen speichern':'💾 Spiel speichern'}</button>
+    ${ed?`<button class="btn btn-d" onclick="cancelEdit()">✕ Abbrechen</button>`:''}
+  </div>`;
+
+  // Spielliste
+  const gs=[...STATE.games].sort((a,b)=>a.date>b.date?-1:1);
+  h+=`<div class="shdr">Alle Spiele (${gs.length})</div>`;
+  gs.forEach(g=>{h+=gameCardHTML(g,true);});
+
+  // Admin beenden
+  h+=`<button class="btn btn-d" style="margin-top:8px" onclick="STATE.isAdmin=false;updateAdminUI();renderEnter()">🔒 Admin-Modus beenden</button>
+  <div style="margin-top:20px;padding:14px;background:var(--panel);border:1px solid var(--b1);border-radius:var(--r);text-align:center">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Systeminformation</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white)">NBoeger</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">Systemverantwortlicher &amp; Entwickler</div>
+    <a href="mailto:nboeger.nb@gmail.com" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--blue2);text-decoration:none">nboeger.nb@gmail.com</a>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:10px;color:var(--muted)">HSG Unterweser II · Regionsoberliga mJC Nord · Saison 2025/26</div>
+  </div>`;
+
+  document.getElementById('view-enter').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════
+// AKTIONEN
+// ═══════════════════════════════════════════════
+function updateRank(v){
+  const n=parseInt(v);
+  if(!isNaN(n)&&n>=1&&n<=20){STATE.ownRank=n;saveAll();toast('Tabellenplatz gespeichert ✓');}
+}
+
+function saveGame(){
+  const date=document.getElementById('f_date').value;
+  const th=document.getElementById('f_th').value.trim();
+  const ta=document.getElementById('f_ta').value.trim();
+  if(!date||!th||!ta){toast('Datum + beide Teams sind Pflicht!',true);return;}
+  const sh=document.getElementById('f_sh').value;
+  const sa=document.getElementById('f_sa').value;
+  const g={
+    id: STATE.editId||uid(),
+    date, time:document.getElementById('f_time').value,
+    round:document.getElementById('f_round').value.trim(),
+    isHome:document.getElementById('f_home').value==='1',
+    teamHome:th, teamAway:ta,
+    scoreH: sh!==''?parseInt(sh):undefined,
+    scoreA: sa!==''?parseInt(sa):undefined,
+    venue:document.getElementById('f_venue').value.trim(),
+    pdf:document.getElementById('f_pdf').value.trim(),
+    note:document.getElementById('f_note').value.trim(),
+  };
+  if(STATE.editId){STATE.games=STATE.games.map(x=>x.id===STATE.editId?g:x);}
+  else{STATE.games.push(g);}
+  STATE.games.sort((a,b)=>a.date<b.date?-1:1);
+  STATE.editId=null;
+  saveAll();
+  toast(STATE.editId?'Spiel aktualisiert ✓':'Spiel gespeichert ✓');
+}
+
+function startEdit(id){
+  STATE.editId=id;
+  showTab('enter',document.querySelectorAll('.tab')[4]);
+  setTimeout(()=>document.getElementById('gameForm')?.scrollIntoView({behavior:'smooth'}),100);
+}
+function cancelEdit(){STATE.editId=null;renderEnter();}
+function deleteGame(id){
+  if(!confirm('Spiel wirklich löschen?'))return;
+  STATE.games=STATE.games.filter(g=>g.id!==id);
+  saveAll();toast('Spiel gelöscht');
+}
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS SETUP
+// ═══════════════════════════════════════════════
+function copyAppsScript(){
+  const code=`function doGet(e) {
+  var ss = SpreadsheetApp.openById("1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E");
+  var sheet = ss.getSheetByName("Daten") || ss.insertSheet("Daten");
+  var raw = sheet.getRange(1,1).getValue();
+  var result = raw ? JSON.parse(raw) : {games:[], ownRank:9};
+  var payload = JSON.stringify({ok:true, data:result});
+  var cb = e.parameter.callback;
+  if (cb) {
+    return ContentService
+      .createTextOutput(cb + "(" + payload + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService
+    .createTextOutput(payload)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var ss = SpreadsheetApp.openById("1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E");
+  var sheet = ss.getSheetByName("Daten") || ss.insertSheet("Daten");
+  var body = JSON.parse(e.postData.contents);
+  if (body.action === "write") {
+    sheet.getRange(1,1).setValue(JSON.stringify(body.data));
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+  navigator.clipboard.writeText(code)
+    .then(()=>toast('✅ Neuer Code kopiert!'))
+    .catch(()=>toast('Kopieren fehlgeschlagen',true));
+}
+
+function saveGsUrl(){
+  const url=document.getElementById('gsUrlInput').value.trim();
+  if(!url||!url.startsWith('https://script.google.com')){toast('Bitte eine gültige Google Apps Script URL eingeben',true);return;}
+  STATE.gsUrl=url;STATE.gsConnected=true;
+  LS.set('hsg_gs_url',url);
+  // Alle lokalen Daten direkt nach GSheets hochladen
+  gsWrite({games:STATE.games,ownRank:STATE.ownRank}).then(ok=>{
+    if(ok){toast('✅ Google Sheets verbunden & Daten hochgeladen!');}
+    else{toast('Verbindung gespeichert – Upload beim nächsten Speichern',true);}
+  });
+  closeModal('gsModal');renderActive();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION & MODALS
+// ═══════════════════════════════════════════════
+function showTab(id, el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('view-'+id).classList.add('on');
+  if(el)el.classList.add('on');
+  STATE.activeTab=id;
+  renderActive();
+}
+function renderActive(){
+  switch(STATE.activeTab){
+    case 'overview':  renderOverview();  break;
+    case 'saison':    renderSaison();    break;
+    case 'torjaeger': renderTorjaeger(); break;
+    case 'spielplan': renderSpielplan(); break;
+    case 'impressum': renderImpressum(); break;
+    case 'enter':     renderEnter();     break;
+  }
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function openPin(){
+  document.getElementById('pinInput').value='';
+  document.getElementById('pinErr').style.display='none';
+  openModal('pinModal');
+  setTimeout(()=>document.getElementById('pinInput').focus(),200);
+}
+function checkPin(){
+  if(document.getElementById('pinInput').value===ADMIN_PIN){
+    STATE.isAdmin=true;updateAdminUI();closeModal('pinModal');
+    toast('✅ Admin-Modus aktiviert');renderEnter();
+  } else {
+    document.getElementById('pinErr').style.display='block';
+    document.getElementById('pinInput').value='';
+  }
+}
+function updateAdminUI(){
+  document.getElementById('adminDot').style.display=STATE.isAdmin?'block':'none';
+  document.getElementById('btnPin').style.display=STATE.isAdmin?'none':'block';
+}
+
+// ═══════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════
+// iOS Safari Höhen-Fix (URL-Leiste verschiebt Layout)
+function fixIOSHeight() {
+  const app = document.querySelector('.app');
+  if (app) app.style.height = window.innerHeight + 'px';
+}
+if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  fixIOSHeight();
+  window.addEventListener('resize', fixIOSHeight);
+  window.addEventListener('orientationchange', () => setTimeout(fixIOSHeight, 300));
+}
+
+window.addEventListener('load', ()=>{
+  syncAll(false);
+  setInterval(()=>{ if(STATE.activeTab==='overview')renderOverview(); }, 60000);
+});
+</script>
+</body>
+</html>
