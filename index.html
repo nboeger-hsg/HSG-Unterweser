@@ -754,27 +754,27 @@ function renderSpielplan() {
 // FOTOS
 // ═══════════════════════════════════════════════
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
-const FOTO_COUNT = 100; // foto_1.jpg bis foto_100.jpg
+const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 let lbIndex = 0;
 
 function renderFotos() {
   const el = document.getElementById('view-fotos');
 
   let grid = '';
-  for (let i = 1; i <= FOTO_COUNT; i++) {
+  FOTOS.forEach((n, i) => {
     grid += `<div class="foto-thumb loading" onclick="lbOpen(${i})">
-      <img src="${FOTO_BASE}foto_${i}.jpg"
+      <img src="${FOTO_BASE}foto_${n}.jpg"
            loading="lazy"
            onload="this.parentNode.classList.remove('loading')"
            onerror="this.parentNode.style.display='none'"
-           alt="Foto ${i}"/>
+           alt="Foto ${n}"/>
     </div>`;
-  }
+  });
 
   el.innerHTML = `
     <div class="galerie-header pad" style="padding-bottom:10px">
       <div class="shdr" style="margin-top:0">📸 Teamfotos · HSG Unterweser II</div>
-      <div style="font-size:11px;color:var(--muted)">Tippe auf ein Foto zum Vergrößern · Saison 2025/26</div>
+      <div style="font-size:11px;color:var(--muted)">${FOTOS.length} Fotos · Tippe zum Vergrößern · Saison 2025/26</div>
     </div>
     <div class="foto-grid">${grid}</div>
     <div style="padding:16px;text-align:center;font-size:11px;color:var(--muted)">
@@ -782,10 +782,10 @@ function renderFotos() {
     </div>`;
 }
 
-function lbOpen(n) {
-  lbIndex = n;
-  document.getElementById('lbImg').src = FOTO_BASE + 'foto_' + n + '.jpg';
-  document.getElementById('lbCount').textContent = n + ' / ' + FOTO_COUNT;
+function lbOpen(i) {
+  lbIndex = i;
+  document.getElementById('lbImg').src = FOTO_BASE + 'foto_' + FOTOS[i] + '.jpg';
+  document.getElementById('lbCount').textContent = (i+1) + ' / ' + FOTOS.length;
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -794,9 +794,9 @@ function lbClose() {
   document.body.style.overflow = '';
 }
 function lbMove(dir) {
-  lbIndex = Math.max(1, Math.min(FOTO_COUNT, lbIndex + dir));
-  document.getElementById('lbImg').src = FOTO_BASE + 'foto_' + lbIndex + '.jpg';
-  document.getElementById('lbCount').textContent = lbIndex + ' / ' + FOTO_COUNT;
+  lbIndex = Math.max(0, Math.min(FOTOS.length-1, lbIndex + dir));
+  document.getElementById('lbImg').src = FOTO_BASE + 'foto_' + FOTOS[lbIndex] + '.jpg';
+  document.getElementById('lbCount').textContent = (lbIndex+1) + ' / ' + FOTOS.length;
 }
 function lbClickOutside(e) {
   if (e.target === document.getElementById('lightbox')) lbClose();
@@ -804,10 +804,15 @@ function lbClickOutside(e) {
 // Wisch-Gesten für Lightbox (iOS/Android)
 (function(){
   let sx = 0;
-  document.getElementById('lightbox')?.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
-  document.getElementById('lightbox')?.addEventListener('touchend',   e => {
-    const dx = e.changedTouches[0].clientX - sx;
-    if (Math.abs(dx) > 50) lbMove(dx < 0 ? 1 : -1);
+  document.addEventListener('touchstart', e => {
+    if (document.getElementById('lightbox').classList.contains('open'))
+      sx = e.touches[0].clientX;
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if (document.getElementById('lightbox').classList.contains('open')) {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 50) lbMove(dx < 0 ? 1 : -1);
+    }
   }, {passive:true});
 })();
 
