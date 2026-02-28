@@ -989,7 +989,8 @@ function saveHighlight() {
   hl.ort   = document.getElementById("hlOrt").value.trim();
   hl.datum = document.getElementById("hlDatum").value;
   hl.beschreibung = document.getElementById("hlBeschreibung").value.trim();
-  hl.website = document.getElementById("hlWebsite").value.trim();
+  const rawUrl = document.getElementById("hlWebsite").value.trim();
+  hl.website = rawUrl && !rawUrl.match(/^https?:\/\//i) ? "https://" + rawUrl : rawUrl;
   if(!hl.games) hl.games = [];
 
   // Foto-URLs einlesen, leere Zeilen filtern, Drive-Links konvertieren
