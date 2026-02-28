@@ -112,6 +112,18 @@ nav::-webkit-scrollbar{display:none}
 .bracket-match .t{padding:2px 0;display:flex;justify-content:space-between}
 .bracket-match .t.win{color:var(--green);font-weight:700}
 .bracket-rounds{display:flex;align-items:flex-start;padding:8px 0}
+.group-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.group-box{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:10px}
+.group-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue2);margin-bottom:8px}
+.group-team{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--b1)}
+.group-team:last-child{border-bottom:none}
+.group-team.advance{color:var(--green);font-weight:600}
+.ko-phase{margin-top:4px}
+.ko-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:8px;padding-top:8px;border-top:1px solid var(--b1)}
+.ko-match{background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.ko-match-label{font-size:10px;color:var(--muted);margin-bottom:4px;font-family:'Rajdhani',sans-serif;letter-spacing:.5px}
+.ko-team{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.ko-team.win{color:var(--green);font-weight:700}
 
 /* GALERIE */
 .foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
@@ -662,11 +674,14 @@ function renderHighlights() {
           <span class="hl-badge ${hl.typ}">${hl.typ==='turnier'?'Turnier':'Event'}</span>
         </div>
         <div class="hl-body" id="hl-body-${idx}">
-          ${hl.beschreibung?`<div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px">${hl.beschreibung}</div>`:''}
+          ${hl.beschreibung||hl.website?`<div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px">
+            ${hl.beschreibung||''}
+            ${hl.website?`<div style="margin-top:6px"><a href="${hl.website}" target="_blank" style="color:var(--blue2);font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">&#127758; ${hl.website.replace(/^https?:\/\//,'').replace(/\/$/,'')}</a></div>`:''}
+          </div>`:''}
           <div class="hl-tabs">
             <div class="hl-tab on" id="hlt-${idx}-spiele"   onclick="hlTab(${idx},'spiele')">&#128197; Spiele</div>
             <div class="hl-tab"    id="hlt-${idx}-torjaeger" onclick="hlTab(${idx},'torjaeger')">&#9917; Torjäger</div>
-            ${hl.bracket?`<div class="hl-tab" id="hlt-${idx}-bracket" onclick="hlTab(${idx},'bracket')">&#127942; Turnierbaum</div>`:''}
+            ${hl.typ==='turnier'?`<div class="hl-tab" id="hlt-${idx}-bracket" onclick="hlTab(${idx},'bracket')">&#127942; Turnierbaum</div>`:''}
             ${(hl.fotos||[]).length?`<div class="hl-tab" id="hlt-${idx}-fotos" onclick="hlTab(${idx},'fotos')">&#128247; Fotos</div>`:''}
           </div>
           <div id="hl-content-${idx}">
@@ -743,24 +758,139 @@ function renderHLTorjaeger(hl) {
 }
 
 function renderHLBracket(hl) {
-  if(!hl.bracket || !hl.bracket.rounds || !hl.bracket.rounds.length)
-    return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch kein Turnierbaum eingetragen.</div>`;
-  let h = `<div class="bracket"><div class="bracket-rounds">`;
-  hl.bracket.rounds.forEach(round => {
-    h += `<div class="bracket-round">
-      <div style="font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">${round.name}</div>`;
-    (round.matches||[]).forEach(m => {
-      const w1 = isPlayed(m) && parseInt(m.scoreH)>parseInt(m.scoreA);
-      const w2 = isPlayed(m) && parseInt(m.scoreA)>parseInt(m.scoreH);
-      h += `<div class="bracket-match">
-        <div class="t ${w1?'win':''}">${m.teamHome||"TBD"} ${isPlayed(m)?m.scoreH:""}</div>
-        <div class="t ${w2?'win':''}">${m.teamAway||"TBD"} ${isPlayed(m)?m.scoreA:""}</div>
-      </div>`;
+  if(!hl.bracket) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch kein Turnierbaum eingetragen.${STATE.isAdmin?` <button class="btn btn-g btn-sm" style="margin:0;width:auto;display:inline-block" onclick="openBracketEditor(${STATE.highlights.indexOf(hl)})">&#9998; Jetzt anlegen</button>`:''}</div>`;
+
+  let h = '';
+
+  // GRUPPEN
+  const groups = hl.bracket.groups||[];
+  if(groups.length) {
+    h += `<div class="group-grid">`;
+    groups.forEach(g => {
+      h += `<div class="group-box"><div class="group-title">${g.name}</div>`;
+      (g.teams||[]).forEach((t,i) => {
+        const adv = i < (g.advance||2);
+        h += `<div class="group-team ${adv?'advance':''}">${adv?'&#9650; ':''}${t.name}<span style="color:var(--muted)">${t.pts!==undefined?t.pts+' Pkt':''}</span></div>`;
+      });
+      h += `</div>`;
     });
     h += `</div>`;
+  }
+
+  // KO-RUNDEN
+  const rounds = hl.bracket.rounds||[];
+  if(rounds.length) {
+    h += `<div class="ko-phase"><div class="ko-title">&#127942; K.O.-Phase</div>`;
+    rounds.forEach(round => {
+      (round.matches||[]).forEach(m => {
+        const w1 = m.scoreH!==undefined && m.scoreH!=='' && parseInt(m.scoreH)>parseInt(m.scoreA);
+        const w2 = m.scoreA!==undefined && m.scoreA!=='' && parseInt(m.scoreA)>parseInt(m.scoreH);
+        const played = m.scoreH!==undefined && m.scoreH!=='';
+        h += `<div class="ko-match">
+          <div class="ko-match-label">${round.name}</div>
+          <div class="ko-team ${w1?'win':''}">${m.teamHome||'TBD'}${played?' &nbsp; '+m.scoreH:''}</div>
+          <div class="ko-team ${w2?'win':''}">${m.teamAway||'TBD'}${played?' &nbsp; '+m.scoreA:''}</div>
+        </div>`;
+      });
+    });
+    h += `</div>`;
+  }
+
+  if(STATE.isAdmin) h += `<button class="btn btn-g btn-sm" style="margin-top:6px" onclick="openBracketEditor(${STATE.highlights.indexOf(hl)})">&#9998; Turnierbaum bearbeiten</button>`;
+  return h || `<div style="color:var(--muted);font-size:12px">Keine Daten vorhanden.</div>`;
+}
+
+// ═══════════════════════════════════════
+// TURNIERBAUM EDITOR
+// ═══════════════════════════════════════
+function openBracketEditor(hlIdx) {
+  const hl = STATE.highlights[hlIdx];
+  const b = hl.bracket || {groups:[], rounds:[]};
+  const groups = b.groups && b.groups.length ? b.groups : [
+    {name:"Gruppe A", advance:2, teams:[{name:"HSG Unterweser CII",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]},
+    {name:"Gruppe B", advance:2, teams:[{name:"",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]}
+  ];
+  const rounds = b.rounds && b.rounds.length ? b.rounds : [
+    {name:"Halbfinale", matches:[{teamHome:"1. Gr.A",teamAway:"2. Gr.B",scoreH:"",scoreA:""},{teamHome:"1. Gr.B",teamAway:"2. Gr.A",scoreH:"",scoreA:""}]},
+    {name:"Finale",    matches:[{teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:""}]},
+  ];
+
+  let gHtml = groups.map((g,gi) => `
+    <div style="background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);margin-bottom:8px">${g.name}</div>
+      ${g.teams.map((t,ti) => `
+        <div style="display:flex;gap:6px;margin-bottom:4px">
+          <input style="flex:1" placeholder="Team ${ti+1}" id="gt_${gi}_${ti}_n" value="${t.name||''}"/>
+          <input style="width:54px" type="number" placeholder="Pkt" id="gt_${gi}_${ti}_p" value="${t.pts!==undefined&&t.pts!==''?t.pts:''}"/>
+        </div>`).join('')}
+    </div>`).join('');
+
+  let rHtml = rounds.map((r,ri) => `
+    <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">${r.name}</div>
+      ${r.matches.map((m,mi) => `
+        <div style="margin-bottom:6px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <input style="flex:1" placeholder="Heim" id="km_${ri}_${mi}_h" value="${m.teamHome||''}"/>
+            <input style="width:42px;text-align:center" type="number" placeholder="-" id="km_${ri}_${mi}_sh" value="${m.scoreH!==undefined&&m.scoreH!==''?m.scoreH:''}"/>
+            <span style="color:var(--muted);font-size:11px">:</span>
+            <input style="width:42px;text-align:center" type="number" placeholder="-" id="km_${ri}_${mi}_sa" value="${m.scoreA!==undefined&&m.scoreA!==''?m.scoreA:''}"/>
+            <input style="flex:1" placeholder="Gast" id="km_${ri}_${mi}_a" value="${m.teamAway||''}"/>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById("hlModalContent").innerHTML = `
+    <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--blue2);margin-bottom:8px">&#127942; Gruppenphase</div>
+    ${gHtml}
+    <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;margin-top:4px">&#9876; K.O.-Phase</div>
+    ${rHtml}
+    <input type="hidden" id="bracketHlIdx" value="${hlIdx}"/>
+    <input type="hidden" id="bracketGroups" value="${JSON.stringify(groups).replace(/"/g,'&quot;')}"/>
+    <input type="hidden" id="bracketRounds" value="${JSON.stringify(rounds).replace(/"/g,'&quot;')}"/>
+  `;
+
+  document.getElementById("hlModal").querySelector(".btn-p").onclick = saveBracket;
+  openModal("hlModal");
+}
+
+function saveBracket() {
+  const hlIdx = parseInt(document.getElementById("bracketHlIdx").value);
+  const hl = STATE.highlights[hlIdx];
+  const rawGroups = JSON.parse(document.getElementById("bracketGroups").value.replace(/&quot;/g,'"'));
+  const rawRounds = JSON.parse(document.getElementById("bracketRounds").value.replace(/&quot;/g,'"'));
+
+  // Gruppen auslesen
+  const groups = rawGroups.map((g,gi) => ({
+    name: g.name,
+    advance: g.advance||2,
+    teams: g.teams.map((t,ti) => ({
+      name: document.getElementById(`gt_${gi}_${ti}_n`)?.value.trim() || '',
+      pts:  document.getElementById(`gt_${gi}_${ti}_p`)?.value !== '' ? parseInt(document.getElementById(`gt_${gi}_${ti}_p`)?.value||0) : ''
+    })).filter(t => t.name)
+  }));
+
+  // KO-Runden auslesen
+  const rounds = rawRounds.map((r,ri) => ({
+    name: r.name,
+    matches: r.matches.map((m,mi) => ({
+      teamHome: document.getElementById(`km_${ri}_${mi}_h`)?.value.trim()||'',
+      teamAway: document.getElementById(`km_${ri}_${mi}_a`)?.value.trim()||'',
+      scoreH:   document.getElementById(`km_${ri}_${mi}_sh`)?.value,
+      scoreA:   document.getElementById(`km_${ri}_${mi}_sa`)?.value,
+    }))
+  }));
+
+  if(!hl.bracket) hl.bracket = {};
+  hl.bracket.groups = groups;
+  hl.bracket.rounds = rounds;
+
+  document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHighlight;
+  saveAll().then(() => {
+    toast("&#9989; Turnierbaum gespeichert");
+    closeModal("hlModal");
+    renderHighlights();
   });
-  h += `</div></div>`;
-  return h;
 }
 
 function renderHLFotos(hl, idx) {
@@ -810,6 +940,8 @@ function showHLModal(hl) {
     </select>
     <label>Ort</label><input id="hlOrt" value="${hl.ort||''}"/>
     <label>Datum</label><input type="date" id="hlDatum" value="${hl.datum||''}"/>
+    <label>Offizielle Website (optional)</label>
+    <input id="hlWebsite" placeholder="https://www.arnhem-cup.nl/de" value="${hl.website||''}"/>
     <label>Beschreibung</label>
     <textarea id="hlBeschreibung" rows="3">${hl.beschreibung||''}</textarea>
 
@@ -857,6 +989,7 @@ function saveHighlight() {
   hl.ort   = document.getElementById("hlOrt").value.trim();
   hl.datum = document.getElementById("hlDatum").value;
   hl.beschreibung = document.getElementById("hlBeschreibung").value.trim();
+  hl.website = document.getElementById("hlWebsite").value.trim();
   if(!hl.games) hl.games = [];
 
   // Foto-URLs einlesen, leere Zeilen filtern, Drive-Links konvertieren
