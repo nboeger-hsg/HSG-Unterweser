@@ -117,6 +117,11 @@ nav::-webkit-scrollbar{display:none}
 .foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
 .foto-thumb{aspect-ratio:1;overflow:hidden;cursor:pointer;background:var(--bg3);position:relative}
 .foto-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .2s ease;display:block}
+/* Highlight-Fotos: 2-spaltig, contain damit nichts abgeschnitten wird */
+.hl-foto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:4px 0}
+.hl-foto-thumb{aspect-ratio:4/3;overflow:hidden;cursor:pointer;background:var(--bg3);border-radius:8px;border:1px solid var(--b1)}
+.hl-foto-thumb img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .2s ease}
+.hl-foto-thumb:active img{transform:scale(.97)}
 .foto-thumb.loading{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
@@ -764,8 +769,8 @@ function renderHLFotos(hl, idx) {
       : "";
     return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Fotos vorhanden.${adminHint}</div>`;
   }
-  return `<div class="foto-grid">${fotos.map((url,i) => `
-    <div class="foto-thumb loading" onclick="lbOpenList(${JSON.stringify(fotos)},${i})">
+  return `<div class="hl-foto-grid">${fotos.map((url,i) => `
+    <div class="hl-foto-thumb" onclick="lbOpenList(${JSON.stringify(fotos)},${i})">
       <img src="${url}" loading="lazy"
            onload="this.parentNode.classList.remove('loading')"
            onerror="this.parentNode.style.background='var(--bg3)';this.style.display='none'"
