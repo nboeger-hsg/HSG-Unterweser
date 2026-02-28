@@ -758,13 +758,22 @@ function renderHLBracket(hl) {
 
 function renderHLFotos(hl, idx) {
   const fotos = hl.fotos||[];
-  if(!fotos.length) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Fotos.</div>`;
-  return `<div class="foto-grid">${fotos.map((f,i)=>`
-    <div class="foto-thumb loading" onclick="lbOpenCustom(${JSON.stringify(fotos)},${i})">
-      <img src="${FOTO_BASE}${f}" loading="lazy"
+  if(!fotos.length) {
+    const adminHint = STATE.isAdmin
+      ? `<br><button class="btn btn-g btn-sm" style="margin-top:8px" onclick="editHighlight(${idx})">&#128247; Fotos hinzufügen</button>`
+      : "";
+    return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Fotos vorhanden.${adminHint}</div>`;
+  }
+  return `<div class="foto-grid">${fotos.map((url,i) => `
+    <div class="foto-thumb loading" onclick="lbOpenList(${JSON.stringify(fotos)},${i})">
+      <img src="${url}" loading="lazy"
            onload="this.parentNode.classList.remove('loading')"
-           onerror="this.parentNode.style.display='none'" alt="Foto"/>
-    </div>`).join("")}</div>`;
+           onerror="this.parentNode.style.background='var(--bg3)';this.style.display='none'"
+           alt="Turnierfoto ${i+1}"
+           referrerpolicy="no-referrer"/>
+    </div>`).join("")}
+  </div>
+  <div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">${fotos.length} Foto${fotos.length!==1?'s':''}</div>`;
 }
 
 // ═══════════════════════════════════════
@@ -784,6 +793,7 @@ function deleteHighlight(idx) {
   saveAll().then(()=>{ toast("&#128465; Gelöscht"); renderHighlights(); });
 }
 function showHLModal(hl) {
+  const fotoListe = (hl.fotos||[]).join("\n");
   document.getElementById("hlModalContent").innerHTML = `
     <label>Name</label><input id="hlName" value="${hl.name||''}"/>
     <label>Typ</label>
@@ -793,21 +803,69 @@ function showHLModal(hl) {
     </select>
     <label>Ort</label><input id="hlOrt" value="${hl.ort||''}"/>
     <label>Datum</label><input type="date" id="hlDatum" value="${hl.datum||''}"/>
-    <label>Beschreibung</label><textarea id="hlBeschreibung" rows="3">${hl.beschreibung||''}</textarea>
+    <label>Beschreibung</label>
+    <textarea id="hlBeschreibung" rows="3">${hl.beschreibung||''}</textarea>
+
+    <div style="margin-top:10px;padding:10px;background:rgba(30,111,224,.08);border:1px solid var(--b2);border-radius:8px">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);margin-bottom:6px">&#128247; Foto-URLs (eine pro Zeile)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6">
+        <strong style="color:var(--white)">GitHub:</strong> https://nboeger-hsg.github.io/HSG-Unterweser/turniere/ordnername/foto_1.jpg<br>
+        <strong style="color:var(--white)">Google Drive:</strong> Drive-Link einfügen (öffentlich freigegeben)
+      </div>
+      <textarea id="hlFotos" rows="5" placeholder="https://nboeger-hsg.github.io/HSG-Unterweser/turniere/...&#10;https://drive.google.com/...">${fotoListe}</textarea>
+      <button class="btn btn-g btn-sm" style="margin:4px 0 0" onclick="hlFotoHilfe()">&#63; Wie funktioniert Google Drive?</button>
+    </div>
+
+    <div id="hlFotoHilfe" style="display:none;margin-top:8px;padding:10px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--white)">Google Drive Schritt für Schritt:</strong><br>
+      1. Foto in Google Drive hochladen<br>
+      2. Rechtsklick auf das Foto → <em>„Freigabe"</em><br>
+      3. Auf <em>„Jeder mit dem Link"</em> setzen → <em>„Link kopieren"</em><br>
+      4. Den kopierten Link hier einfügen<br>
+      <br>
+      <strong style="color:var(--amber)">Wichtig:</strong> Drive-Links werden automatisch in direkte Bildlinks umgewandelt.
+    </div>
   `;
   openModal("hlModal");
 }
+
+function hlFotoHilfe() {
+  const el = document.getElementById("hlFotoHilfe");
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function convertDriveUrl(url) {
+  // Google Drive Share-Link → direkter Bildlink
+  // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  const m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1200`;
+  // Falls schon direkter Link oder anderes Format — unverändert lassen
+  return url;
+}
+
 function saveHighlight() {
   const hl = STATE.hlEditId !== null ? STATE.highlights[STATE.hlEditId] : {};
-  hl.name = document.getElementById("hlName").value.trim();
-  hl.typ  = document.getElementById("hlTyp").value;
-  hl.ort  = document.getElementById("hlOrt").value.trim();
+  hl.name  = document.getElementById("hlName").value.trim();
+  hl.typ   = document.getElementById("hlTyp").value;
+  hl.ort   = document.getElementById("hlOrt").value.trim();
   hl.datum = document.getElementById("hlDatum").value;
   hl.beschreibung = document.getElementById("hlBeschreibung").value.trim();
-  if(!hl.games) hl.games=[];
-  if(!hl.fotos) hl.fotos=[];
+  if(!hl.games) hl.games = [];
+
+  // Foto-URLs einlesen, leere Zeilen filtern, Drive-Links konvertieren
+  const rohe = document.getElementById("hlFotos").value
+    .split("\n")
+    .map(u => u.trim())
+    .filter(u => u.length > 0)
+    .map(u => convertDriveUrl(u));
+  hl.fotos = rohe;
+
   if(STATE.hlEditId === null) STATE.highlights.push(hl);
-  saveAll().then(()=>{ toast("&#9989; Highlight gespeichert"); closeModal("hlModal"); renderHighlights(); });
+  saveAll().then(() => {
+    toast("&#9989; Highlight gespeichert");
+    closeModal("hlModal");
+    renderHighlights();
+  });
 }
 
 // Spiel zu Highlight hinzufügen/bearbeiten
