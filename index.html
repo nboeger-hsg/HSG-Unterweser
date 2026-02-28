@@ -477,7 +477,9 @@ function parseScorers(gameList) {
   const map = {};
   gameList.filter(g=>isPlayed(g)&&g.note).forEach(g=>{
     g.note.split(";").forEach(part=>{
-      const m = part.trim().match(/^([A-ZÄÖÜa-zäöü\-]+)\s+(\d+)\s*Tor/i);
+      part = part.trim();
+      // Matcht: "Name Zahl Tor..."  UND  "Name Zahl (7M..."  UND  "Name Zahl" am Ende
+      const m = part.match(/^([A-ZÄÖÜa-zäöü\-]+)\s+(\d+)(?:\s+Tor|\s*\(|\s*$)/i);
       if(!m) return;
       const name = fixName(m[1]);
       const tore = parseInt(m[2]);
@@ -1158,7 +1160,18 @@ function doPost(e) {
 // IMPRESSUM
 // ═══════════════════════════════════════
 function renderImpressum() {
-  document.getElementById("view-impressum").innerHTML = `
+  const INFO_URL = "https://nboeger-hsg.github.io/HSG-Unterweser/info.html";
+  const WA_TEXT = encodeURIComponent("🤾 HSG Unterweser CII App – Version 5 ist da!\n\nSpielplan, Torjäger, Turniere & Fotos – alles auf einen Blick.\n\n👉 App öffnen:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/\n\n📲 Anleitung zum Speichern auf dem Startbildschirm:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/info.html");
+  const WA_URL = "https://wa.me/?text=" + WA_TEXT;
+  const infoCard = `
+    <div style="background:linear-gradient(135deg,rgba(30,111,224,.15),rgba(30,111,224,.05));border:1px solid rgba(30,111,224,.35);border-radius:14px;padding:18px;margin-bottom:14px;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">🆕</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px">Was ist neu in Version 5?</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Alle Neuerungen & Installationsanleitung</div>
+      <a href="${INFO_URL}" target="_blank" style="display:block;padding:11px;background:var(--blue);border-radius:10px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;text-decoration:none;margin-bottom:8px">&#128065; Info-Seite öffnen</a>
+      <a href="${WA_URL}" target="_blank" style="display:block;padding:11px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:10px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#25d366;text-decoration:none">&#128172; Per WhatsApp teilen</a>
+    </div>`;
+  document.getElementById("view-impressum").innerHTML = infoCard + `
 
   <div class="shdr" style="margin-top:4px">Wichtiger Hinweis</div>
   <div class="card" style="border-color:var(--amber);box-shadow:0 0 20px rgba(240,165,0,.12)">
