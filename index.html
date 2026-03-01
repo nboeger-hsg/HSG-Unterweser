@@ -282,7 +282,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 // KONSTANTEN
 // ═══════════════════════════════════════
 const ADMIN_PIN = "1967";
-const GS_URL = "https://script.google.com/macros/s/AKfycbxRRIvjGYSmdwyX70JvjHlOOKHdTiJUk0se1ef-mthxspINOFKRN5R6OSfVd9PmC6L_SQ/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbz_uARo7pS0dAPWaLWJ8kM1v-Gz3N_32QN8K7_3Xx3_-0mohof_F6Jn9ypmOe-Rd4hVCw/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
@@ -361,10 +361,25 @@ function gsReadJSONP() {
 }
 
 async function gsWrite(data) {
-  try {
-    await fetch(GS_URL, {method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"write",data})});
-    return true;
-  } catch { return false; }
+  // Schreiben über GET+JSONP (vermeidet no-cors Probleme)
+  return new Promise(resolve => {
+    const cb = "hsg_write_" + Date.now();
+    const script = document.createElement("script");
+    let done = false;
+    const finish = ok => {
+      if(done) return; done=true;
+      try{delete window[cb];}catch(e){}
+      try{if(script.parentNode)script.parentNode.removeChild(script);}catch(e){}
+      resolve(ok);
+    };
+    const timer = setTimeout(()=>finish(false), 15000);
+    window[cb] = r => { clearTimeout(timer); finish(r&&r.ok===true); };
+    script.onerror = ()=>{ clearTimeout(timer); finish(false); };
+    const encoded = encodeURIComponent(JSON.stringify(data));
+    script.src = GS_URL+"?action=write&callback="+cb+"&data="+encoded+"&t="+Date.now();
+    script.type="text/javascript"; script.async=true;
+    document.head.appendChild(script);
+  });
 }
 
 // ═══════════════════════════════════════
@@ -409,11 +424,17 @@ async function syncAll() {
 }
 
 async function saveAll() {
+  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
   const ok = await gsWrite({
     seasons: STATE.seasons,
     highlights: STATE.highlights,
   });
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  if(ok) {
+    setBanner("&#9679; Google Sheets verbunden", true);
+  } else {
+    setBanner("&#9651; Speichern fehlgeschlagen — nur lokal gespeichert!", false);
+    toast("&#9888; Google Sheets nicht erreichbar", true);
+  }
   return ok;
 }
 
@@ -1262,8 +1283,26 @@ function copyAppsScript() {
   var sheet = ss.getSheetByName("Daten") || ss.insertSheet("Daten");
   var raw = sheet.getRange(1,1).getValue();
   var result = raw ? JSON.parse(raw) : {seasons:{},highlights:[]};
-  var payload = JSON.stringify({ok:true, data:result});
+  var action = e.parameter.action || "read";
   var cb = e.parameter.callback;
+
+  if (action === "write") {
+    var dataParam = e.parameter.data;
+    if (dataParam) {
+      sheet.getRange(1,1).setValue(dataParam);
+    }
+    var writePayload = JSON.stringify({ok:true});
+    if (cb) {
+      return ContentService
+        .createTextOutput(cb + "(" + writePayload + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService
+      .createTextOutput(writePayload)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var payload = JSON.stringify({ok:true, data:result});
   if (cb) {
     return ContentService
       .createTextOutput(cb + "(" + payload + ")")
@@ -1275,10 +1314,10 @@ function copyAppsScript() {
 }
 
 function doPost(e) {
-  var ss = SpreadsheetApp.openById("1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E");
-  var sheet = ss.getSheetByName("Daten") || ss.insertSheet("Daten");
+  var ss = SpreadsheetApp.openById(\"1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E\");
+  var sheet = ss.getSheetByName(\"Daten\") || ss.insertSheet(\"Daten\");
   var body = JSON.parse(e.postData.contents);
-  if (body.action === "write") {
+  if (body.action === \"write\") {
     sheet.getRange(1,1).setValue(JSON.stringify(body.data));
   }
   return ContentService
