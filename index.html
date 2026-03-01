@@ -282,7 +282,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 // KONSTANTEN
 // ═══════════════════════════════════════
 const ADMIN_PIN = "1967";
-const GS_URL = "https://script.google.com/macros/s/AKfycbz_uARo7pS0dAPWaLWJ8kM1v-Gz3N_32QN8K7_3Xx3_-0mohof_F6Jn9ypmOe-Rd4hVCw/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbw7Qp9tEkQntsPIitkA0NzbcSYs-lJbiMNctqsnHiT4F3kukNY5GDWfMy48MEBLyi0N7A/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
@@ -361,23 +361,23 @@ function gsReadJSONP() {
 }
 
 async function gsWrite(data) {
-  // Schreiben über GET+JSONP (vermeidet no-cors Probleme)
   return new Promise(resolve => {
-    const cb = "hsg_write_" + Date.now();
+    const cb = "hsg_w_" + Date.now();
     const script = document.createElement("script");
     let done = false;
     const finish = ok => {
-      if(done) return; done=true;
-      try{delete window[cb];}catch(e){}
-      try{if(script.parentNode)script.parentNode.removeChild(script);}catch(e){}
+      if(done) return; done = true;
+      try { delete window[cb]; } catch(e) {}
+      try { if(script.parentNode) script.parentNode.removeChild(script); } catch(e) {}
       resolve(ok);
     };
-    const timer = setTimeout(()=>finish(false), 15000);
-    window[cb] = r => { clearTimeout(timer); finish(r&&r.ok===true); };
-    script.onerror = ()=>{ clearTimeout(timer); finish(false); };
+    const timer = setTimeout(() => finish(false), 20000);
+    window[cb] = r => { clearTimeout(timer); finish(!!(r && r.ok)); };
+    script.onerror = () => { clearTimeout(timer); finish(false); };
     const encoded = encodeURIComponent(JSON.stringify(data));
-    script.src = GS_URL+"?action=write&callback="+cb+"&data="+encoded+"&t="+Date.now();
-    script.type="text/javascript"; script.async=true;
+    script.src = GS_URL + "?action=write&callback=" + cb + "&data=" + encoded + "&t=" + Date.now();
+    script.type = "text/javascript";
+    script.async = true;
     document.head.appendChild(script);
   });
 }
@@ -1316,10 +1316,12 @@ function copyAppsScript() {
 function doPost(e) {
   var ss = SpreadsheetApp.openById(\"1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E\");
   var sheet = ss.getSheetByName(\"Daten\") || ss.insertSheet(\"Daten\");
-  var body = JSON.parse(e.postData.contents);
-  if (body.action === \"write\") {
-    sheet.getRange(1,1).setValue(JSON.stringify(body.data));
-  }
+  try {
+    var body = JSON.parse(e.postData.contents);
+    if (body.action === \"write\" && body.data) {
+      sheet.getRange(1,1).setValue(JSON.stringify(body.data));
+    }
+  } catch(err) {}
   return ContentService
     .createTextOutput(JSON.stringify({ok:true}))
     .setMimeType(ContentService.MimeType.JSON);
