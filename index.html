@@ -282,7 +282,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 // KONSTANTEN
 // ═══════════════════════════════════════
 const ADMIN_PIN = "1967";
-const GS_URL = "https://script.google.com/macros/s/AKfycbwwqTS4yI61kSHJmiYcESj9YGwS3tFhfDggGD24xPVa168dJPBxTjQ8e_Fl0p7yPr2YuQ/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbxe0MGA7v3etsJsOBUofb0R4AMDOnz3C1d8HzBbmAiKD2XXNPOAkfxV-nicFd7kaLjiuQ/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
@@ -352,7 +352,13 @@ function gsReadJSONP() {
       resolve(r);
     };
     const timer = setTimeout(()=>finish(null), 10000);
-    window[cb] = data => { clearTimeout(timer); finish(data&&data.ok?data.data:null); };
+    // Gibt flaches Objekt zurück: Felder aus data + _writeTs (fuer Verifikation in gsWrite)
+    window[cb] = resp => {
+      clearTimeout(timer);
+      if (!resp || !resp.ok) { finish(null); return; }
+      const out = Object.assign({}, resp.data, { _writeTs: resp._writeTs || null });
+      finish(out);
+    };
     script.type="text/javascript"; script.async=true;
     script.src = GS_URL+"?action=read&callback="+cb+"&t="+Date.now();
     script.onerror = ()=>{ clearTimeout(timer); finish(null); };
@@ -361,27 +367,28 @@ function gsReadJSONP() {
 }
 
 async function gsWrite(data) {
-  // Schreiben via fetch POST (no-cors) + anschließende Verifikation via JSONP
+  // 1) Eindeutiger Schreib-Timestamp als Fingerprint
+  const writeTs = Date.now();
+  const payload = { action: "write", data: { ...data, _writeTs: writeTs } };
+
+  // 2) POST senden (no-cors — wir erwarten keine Antwort, das ist OK)
   try {
-    const body = JSON.stringify({action:"write", data});
     fetch(GS_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: {"Content-Type": "text/plain"},
-      body
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload),
     });
-    // Warte 3s, dann verifiziere ob Daten angekommen
-    await new Promise(r => setTimeout(r, 3000));
+  } catch(e) { /* no-cors wirft nie, nur zur Sicherheit */ }
+
+  // 3) Warte bis zu 10s und prüfe per JSONP ob _writeTs im Sheet angekommen ist
+  const deadline = Date.now() + 10000;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 2500));
     const check = await gsReadJSONP();
-    // Verifikation: Anzahl Spiele muss übereinstimmen
-    const sentGames = Object.values(data.seasons||{}).reduce((n,s)=>n+(s.games||[]).length,0);
-    const gotGames  = Object.values((check&&check.seasons)||{}).reduce((n,s)=>n+(s.games||[]).length,0);
-    const sentHL = (data.highlights||[]).length;
-    const gotHL  = ((check&&check.highlights)||[]).length;
-    return sentGames === gotGames && sentHL === gotHL;
-  } catch(e) {
-    return false;
+    if (check && check._writeTs === writeTs) return true;  // ✅ echt bestätigt
   }
+  return false;  // ❌ Timeout — Daten nicht verifiziert
 }
 
 // ═══════════════════════════════════════
