@@ -398,16 +398,25 @@ async function syncAll() {
   setBanner("Verbinde mit Google Sheets...", false);
   const data = await gsReadJSONP();
 
-  if (data && data.seasons) {
-    // Neue v5 Datenstruktur
+  if (data && data.seasons && data.seasons["2025-26"]) {
+    // Sheets hat vollständige v5-Daten mit bekannter Saison
     STATE.seasons = data.seasons;
     STATE.highlights = data.highlights || [];
+    // Spiele fehlen noch -> Seed einspielen
     if (!STATE.seasons["2025-26"].games || STATE.seasons["2025-26"].games.length === 0) {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank = 9;
       await saveAll();
     }
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+    setBanner("&#9679; Google Sheets verbunden", true);
+  } else if (data && data.seasons && Object.keys(data.seasons).length === 0) {
+    // Sheet leer (frisches Deployment) -> Seed einspielen
+    STATE.seasons["2025-26"].games = SEED_2025;
+    STATE.seasons["2025-26"].rank = 9;
+    STATE.highlights = [];
+    LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+    await saveAll();
     setBanner("&#9679; Google Sheets verbunden", true);
   } else if (data && data.games) {
     // v4 Altdaten — migrieren
@@ -419,7 +428,7 @@ async function syncAll() {
   } else {
     // Offline-Fallback
     const cached = LS.get("hsg_v5");
-    if (cached) {
+    if (cached && cached.seasons && cached.seasons["2025-26"]) {
       STATE.seasons = cached.seasons;
       STATE.highlights = cached.highlights || [];
       setBanner("&#9651; Offline — lokale Daten", false);
