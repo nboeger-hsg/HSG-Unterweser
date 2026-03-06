@@ -511,8 +511,34 @@ function rank()  { return STATE.seasons[STATE.activeSeason]?.rank  ?? null; }
 // ═══════════════════════════════════════
 function fmtDate(d) {
   if(!d) return "";
-  const [y,m,t] = d.split("-");
-  return `${t}.${m}.${y}`;
+  // Sheets liefert manchmal ein Date-Objekt oder ISO-String statt "YYYY-MM-DD"
+  try {
+    let date;
+    if(typeof d === "string" && d.includes("-") && d.length <= 10) {
+      // Normales Format "YYYY-MM-DD" — direkt splitten, kein Date-Objekt nötig
+      const [y,m,t] = d.split("-");
+      if(y && m && t) return `${t.padStart(2,"0")}.${m.padStart(2,"0")}.${y}`;
+    }
+    // Fallback: als Date parsen (für Sheets-Date-Objekte und ISO-Strings)
+    date = new Date(d);
+    if(isNaN(date.getTime())) return String(d);
+    const t = String(date.getDate()).padStart(2,"0");
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const y = date.getFullYear();
+    return `${t}.${m}.${y}`;
+  } catch(e) { return String(d); }
+}
+function fmtTime(t) {
+  if(!t) return "";
+  // Sheets liefert Uhrzeit manchmal als Date-Objekt (1899-12-30T...)
+  if(typeof t === "string" && /^\d{1,2}:\d{2}/.test(t)) return t.substring(0,5);
+  try {
+    const d = new Date(t);
+    if(!isNaN(d.getTime())) {
+      return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+    }
+  } catch(e) {}
+  return String(t);
 }
 function isPlayed(g) { return g.scoreH !== undefined && g.scoreH !== null && g.scoreH !== ""; }
 function ourScore(g) { return g.isHome ? g.scoreH : g.scoreA; }
@@ -556,7 +582,7 @@ function gameCardHTML(g, showEdit=false) {
   return `<div class="game-card ${r}">
     <div class="game-meta">
       <span class="game-round">${g.round||""}</span>
-      <span class="game-date">${fmtDate(g.date)} ${g.time||""}</span>
+      <span class="game-date">${fmtDate(g.date)} ${fmtTime(g.time)}</span>
     </div>
     <div class="game-teams">${opp_team}<span class="badge-home ${g.isHome?'h':'a'}">${g.isHome?"Heim":"Auswärts"}</span></div>
     ${isPlayed(g)
