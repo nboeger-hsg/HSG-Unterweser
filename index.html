@@ -289,6 +289,57 @@ const GS_URL = "https://script.google.com/macros/s/AKfycbxQm3WkbxHkiPyNhTsiZSlhb
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
+const ARNHEM_CUP = {
+  name: "Arnhem Handball Cup 2026",
+  typ: "turnier",
+  ort: "Arnhem (Arnheim; NL)",
+  datum: "2026-04-04",
+  beschreibung: "Arnheim Handball Cup vom 04.04.-05.04.2026",
+  website: "https://www.arnhem-cup.nl/de",
+  games: [],
+  fotos: [],
+  bracket: {
+    groups: [
+      { name: "Gruppe A", advance: 2, teams: [
+        { name: "HSG Unterweser C I", pts: "" },
+        { name: "MTV Geismar",        pts: "" },
+        { name: "HSG Odenwald",       pts: "" },
+        { name: "Skørping Håndbold 1", pts: "" }
+      ]},
+      { name: "Gruppe B", advance: 2, teams: [
+        { name: "HSG Unterweser CII",  pts: "" },
+        { name: "SV Stöckheim",       pts: "" },
+        { name: "Skørping Håndbold 2", pts: "" },
+        { name: "ENköpings HF",       pts: "" }
+      ]}
+    ],
+    rounds: [
+      { name: "Vorrunde (05.04.)", matches: [
+        { teamHome: "#1A",          teamAway: "#4B",          scoreH: "", scoreA: "", info: "Veld 3 · 09:20" },
+        { teamHome: "#4A",          teamAway: "#1B",          scoreH: "", scoreA: "", info: "Veld 4 · 09:20" },
+        { teamHome: "#2A",          teamAway: "#3B",          scoreH: "", scoreA: "", info: "Veld 5 · 09:20" },
+        { teamHome: "#2B",          teamAway: "#3A",          scoreH: "", scoreA: "", info: "Veld 5 · 09:45" }
+      ]},
+      { name: "Halbfinale (05.04.)", matches: [
+        { teamHome: "Sieger 2.1", teamAway: "Sieger 2.4", scoreH: "", scoreA: "", info: "Veld 3 · 11:00" },
+        { teamHome: "Sieger 2.2", teamAway: "Sieger 2.3", scoreH: "", scoreA: "", info: "Veld 1 · 11:25" }
+      ]},
+      { name: "Finale (05.04.)", matches: [
+        { teamHome: "Sieger HF1", teamAway: "Sieger HF2", scoreH: "", scoreA: "", info: "Veld 1 · 12:40" }
+      ]},
+      { name: "Platz 3-4 (05.04.)", matches: [
+        { teamHome: "Verlierer HF1", teamAway: "Verlierer HF2", scoreH: "", scoreA: "", info: "Veld 2 · 12:40" }
+      ]},
+      { name: "Platz 5-6 (05.04.)", matches: [
+        { teamHome: "Sieger 3.3", teamAway: "Sieger 3.4", scoreH: "", scoreA: "", info: "Veld 3 · 12:40" }
+      ]},
+      { name: "Platz 7-8 (05.04.)", matches: [
+        { teamHome: "Verlierer 3.3", teamAway: "Verlierer 3.4", scoreH: "", scoreA: "", info: "Veld 5 · 13:05" }
+      ]}
+    ]
+  }
+};
+
 const NULIGA = {
   meetings: "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?displayTyp=vorrunde&displayDetail=meetings&championship=HRBN+25%2F26&group=432700",
   results:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/teamPortrait?teamtable=2118214&pageState=vorrunde&championship=HRBN+25%2F26&group=432700",
@@ -405,12 +456,20 @@ async function syncAll() {
     // Sheets hat vollständige v5-Daten mit bekannter Saison
     STATE.seasons = data.seasons;
     STATE.highlights = data.highlights || [];
-    // Spiele fehlen noch -> Seed einspielen
+    let needsSave = false;
+    // Spiele fehlen -> Seed einspielen
     if (!STATE.seasons["2025-26"].games || STATE.seasons["2025-26"].games.length === 0) {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank = 9;
-      await saveAll();
+      needsSave = true;
     }
+    // Arnhem Cup fehlt -> wiederherstellen
+    const hasArnhem = STATE.highlights.some(h => h.name && h.name.includes("Arnhem"));
+    if (!hasArnhem) {
+      STATE.highlights.push(ARNHEM_CUP);
+      needsSave = true;
+    }
+    if (needsSave) await saveAll();
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
   } else if (data && data.seasons && Object.keys(data.seasons).length === 0) {
