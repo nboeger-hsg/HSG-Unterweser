@@ -2,6 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <meta name="theme-color" content="#05101f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -852,7 +855,7 @@ function renderHLBracket(hl) {
         const w2 = m.scoreA!==undefined && m.scoreA!=='' && parseInt(m.scoreA)>parseInt(m.scoreH);
         const played = m.scoreH!==undefined && m.scoreH!=='';
         h += `<div class="ko-match">
-          <div class="ko-match-label">${round.name}</div>
+          <div class="ko-match-label">${round.name}${m.info?' <span style="font-size:10px;color:var(--muted);font-weight:400">· '+m.info+'</span>':''}</div>
           <div class="ko-team ${w1?'win':''}">${m.teamHome||'TBD'}${played?' &nbsp; '+m.scoreH:''}</div>
           <div class="ko-team ${w2?'win':''}">${m.teamAway||'TBD'}${played?' &nbsp; '+m.scoreA:''}</div>
         </div>`;
@@ -872,12 +875,42 @@ function openBracketEditor(hlIdx) {
   const hl = STATE.highlights[hlIdx];
   const b = hl.bracket || {groups:[], rounds:[]};
   const groups = b.groups && b.groups.length ? b.groups : [
-    {name:"Gruppe A", advance:2, teams:[{name:"HSG Unterweser CII",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]},
-    {name:"Gruppe B", advance:2, teams:[{name:"",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]}
+    {name:"Gruppe A", advance:2, teams:[
+      {name:"HSG Unterweser C I",pts:""},
+      {name:"MTV Geismar",pts:""},
+      {name:"HSG Odenwald",pts:""},
+      {name:"Skørping Håndbold 1",pts:""}
+    ]},
+    {name:"Gruppe B", advance:2, teams:[
+      {name:"HSG Unterweser CII",pts:""},
+      {name:"SV Stöckheim",pts:""},
+      {name:"Skørping Håndbold 2",pts:""},
+      {name:"Enköpings HF",pts:""}
+    ]}
   ];
   const rounds = b.rounds && b.rounds.length ? b.rounds : [
-    {name:"Halbfinale", matches:[{teamHome:"1. Gr.A",teamAway:"2. Gr.B",scoreH:"",scoreA:""},{teamHome:"1. Gr.B",teamAway:"2. Gr.A",scoreH:"",scoreA:""}]},
-    {name:"Finale",    matches:[{teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:""}]},
+    {name:"Vorrunde (05.04.)", matches:[
+      {teamHome:"#1A",teamAway:"#4B",scoreH:"",scoreA:"",info:"Veld 3 · 09:20"},
+      {teamHome:"#4A",teamAway:"#1B",scoreH:"",scoreA:"",info:"Veld 4 · 09:20"},
+      {teamHome:"#2A",teamAway:"#3B",scoreH:"",scoreA:"",info:"Veld 5 · 09:20"},
+      {teamHome:"#2B",teamAway:"#3A",scoreH:"",scoreA:"",info:"Veld 5 · 09:45"},
+    ]},
+    {name:"Halbfinale (05.04.)", matches:[
+      {teamHome:"Sieger 2.1",teamAway:"Sieger 2.4",scoreH:"",scoreA:"",info:"Veld 3 · 11:00"},
+      {teamHome:"Sieger 2.2",teamAway:"Sieger 2.3",scoreH:"",scoreA:"",info:"Veld 1 · 11:25"},
+    ]},
+    {name:"Finale (05.04.)", matches:[
+      {teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:"",info:"Veld 1 · 12:40"},
+    ]},
+    {name:"Platz 3-4 (05.04.)", matches:[
+      {teamHome:"Verlierer HF1",teamAway:"Verlierer HF2",scoreH:"",scoreA:"",info:"Veld 2 · 12:40"},
+    ]},
+    {name:"Platz 5-6 (05.04.)", matches:[
+      {teamHome:"Sieger 3.3",teamAway:"Sieger 3.4",scoreH:"",scoreA:"",info:"Veld 3 · 12:40"},
+    ]},
+    {name:"Platz 7-8 (05.04.)", matches:[
+      {teamHome:"Verlierer 3.3",teamAway:"Verlierer 3.4",scoreH:"",scoreA:"",info:"Veld 5 · 13:05"},
+    ]},
   ];
 
   let gHtml = groups.map((g,gi) => `
