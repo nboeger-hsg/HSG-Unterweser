@@ -989,12 +989,11 @@ function renderHLFotos(hl, idx) {
   return `<div class="hl-foto-grid">${fotos.map((url,i) => `
     <div class="hl-foto-thumb loading" onclick="lbOpenList(window['${listKey}'],${i})">
       <img src="${url}" loading="lazy"
-           onload="this.parentNode.classList.remove('loading')"
-           onerror="this.parentNode.classList.remove('loading');this.parentNode.style.opacity='.4'"
+           onload="this.style.opacity='1';this.parentNode.classList.remove('loading')"
+           onerror="this.style.opacity='0.3';this.parentNode.classList.remove('loading')"
            alt="Foto ${i+1}"
            referrerpolicy="no-referrer"
-           style="transition:opacity .3s;opacity:0"
-           onload="this.style.opacity='1';this.parentNode.classList.remove('loading')"/>
+           style="transition:opacity .3s;opacity:0"/>
     </div>`).join("")}
   </div>
   <div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">
