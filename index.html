@@ -143,7 +143,7 @@ nav::-webkit-scrollbar{display:none}
 /* LIGHTBOX */
 .lb{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.95);display:none;flex-direction:column;align-items:center;justify-content:center}
 .lb.open{display:flex}
-.lb-img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:4px;user-select:none}
+.lb-img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:4px;user-select:none;transition:opacity .25s ease}
 .lb-bar{display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 20px;flex-shrink:0}
 .lb-count{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:1px}
 .lb-close{font-size:28px;color:var(--white);cursor:pointer;padding:4px 10px;line-height:1}
@@ -764,7 +764,7 @@ function renderHighlights() {
             <div class="hl-tab on" id="hlt-${idx}-spiele"   onclick="hlTab(${idx},'spiele')">&#128197; Spiele</div>
             <div class="hl-tab"    id="hlt-${idx}-torjaeger" onclick="hlTab(${idx},'torjaeger')">&#9917; Torjäger</div>
             ${hl.typ==='turnier'?`<div class="hl-tab" id="hlt-${idx}-bracket" onclick="hlTab(${idx},'bracket')">&#127942; Turnierbaum</div>`:''}
-            ${(hl.fotos||[]).length?`<div class="hl-tab" id="hlt-${idx}-fotos" onclick="hlTab(${idx},'fotos')">&#128247; Fotos</div>`:''}
+            <div class="hl-tab" id="hlt-${idx}-fotos" onclick="hlTab(${idx},'fotos')">&#128247; Fotos${(hl.fotos||[]).length?` (${hl.fotos.length})`:''}</div>
           </div>
           <div id="hl-content-${idx}">
             ${renderHLSpiele(hl, idx)}
@@ -983,16 +983,23 @@ function renderHLFotos(hl, idx) {
       : "";
     return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Fotos vorhanden.${adminHint}</div>`;
   }
+  // Fotoliste sicher als globale Variable speichern um onclick-Escaping-Probleme zu vermeiden
+  const listKey = "hlFotos_"+idx;
+  window[listKey] = fotos;
   return `<div class="hl-foto-grid">${fotos.map((url,i) => `
-    <div class="hl-foto-thumb" onclick="lbOpenList(${JSON.stringify(fotos)},${i})">
+    <div class="hl-foto-thumb loading" onclick="lbOpenList(window['${listKey}'],${i})">
       <img src="${url}" loading="lazy"
            onload="this.parentNode.classList.remove('loading')"
-           onerror="this.parentNode.style.background='var(--bg3)';this.style.display='none'"
-           alt="Turnierfoto ${i+1}"
-           referrerpolicy="no-referrer"/>
+           onerror="this.parentNode.classList.remove('loading');this.parentNode.style.opacity='.4'"
+           alt="Foto ${i+1}"
+           referrerpolicy="no-referrer"
+           style="transition:opacity .3s;opacity:0"
+           onload="this.style.opacity='1';this.parentNode.classList.remove('loading')"/>
     </div>`).join("")}
   </div>
-  <div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">${fotos.length} Foto${fotos.length!==1?'s':''}</div>`;
+  <div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">
+    ${fotos.length} Foto${fotos.length!==1?'s':''} · Tippen zum Vergrößern · Wischen zum Blättern
+  </div>`;
 }
 
 // ═══════════════════════════════════════
@@ -1174,26 +1181,47 @@ function renderFotos() {
 // URL-Liste für Lightbox
 const FOTOS_URLS = FOTOS.map(n => `foto_${n}.jpg`);
 
+function lbSrc(url) {
+  return (url||"").startsWith("http") ? url : FOTO_BASE + url;
+}
+function lbSetImg(src) {
+  const img = document.getElementById("lbImg");
+  img.style.opacity = "0";
+  img.onload = () => { img.style.opacity = "1"; };
+  img.onerror = () => { img.style.opacity = "0.3"; };
+  img.src = src;
+}
 function lbOpenList(list, i) {
-  lbCurrentList = list;
-  lbIndex = i;
-  const src = list[i].startsWith("http") ? list[i] : FOTO_BASE + list[i];
-  document.getElementById("lbImg").src = src;
-  document.getElementById("lbCount").textContent = (i+1)+" / "+list.length;
+  lbCurrentList = Array.isArray(list) ? list : Object.values(list);
+  lbIndex = Math.max(0, Math.min(lbCurrentList.length-1, i));
+  lbSetImg(lbSrc(lbCurrentList[lbIndex]));
+  document.getElementById("lbCount").textContent = (lbIndex+1)+" / "+lbCurrentList.length;
   document.getElementById("lightbox").classList.add("open");
   document.body.style.overflow = "hidden";
 }
 function lbOpenCustom(list, i) { lbOpenList(list, i); }
-function lbClose() { document.getElementById("lightbox").classList.remove("open"); document.body.style.overflow=""; }
+function lbClose() {
+  document.getElementById("lightbox").classList.remove("open");
+  document.body.style.overflow = "";
+  document.getElementById("lbImg").src = "";
+}
 function lbMove(dir) {
+  if(!lbCurrentList.length) return;
   lbIndex = Math.max(0, Math.min(lbCurrentList.length-1, lbIndex+dir));
-  const src = lbCurrentList[lbIndex].startsWith("http") ? lbCurrentList[lbIndex] : FOTO_BASE + lbCurrentList[lbIndex];
-  document.getElementById("lbImg").src = src;
+  lbSetImg(lbSrc(lbCurrentList[lbIndex]));
   document.getElementById("lbCount").textContent = (lbIndex+1)+" / "+lbCurrentList.length;
 }
 function lbClickOutside(e) { if(e.target===document.getElementById("lightbox")) lbClose(); }
+// Touch-Swipe
 document.addEventListener("touchstart", e=>{ if(document.getElementById("lightbox").classList.contains("open")) window._lbSx=e.touches[0].clientX; },{passive:true});
 document.addEventListener("touchend", e=>{ if(document.getElementById("lightbox").classList.contains("open")){ const dx=e.changedTouches[0].clientX-(window._lbSx||0); if(Math.abs(dx)>50)lbMove(dx<0?1:-1); }},{passive:true});
+// Tastatur-Support (Pfeiltasten + Escape)
+document.addEventListener("keydown", e=>{
+  if(!document.getElementById("lightbox").classList.contains("open")) return;
+  if(e.key==="ArrowLeft")  lbMove(-1);
+  if(e.key==="ArrowRight") lbMove(1);
+  if(e.key==="Escape")     lbClose();
+});
 
 // ═══════════════════════════════════════
 // ADMIN / ENTER
