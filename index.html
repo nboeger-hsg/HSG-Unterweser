@@ -290,56 +290,38 @@ const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
 const ARNHEM_CUP = {
-  name: "Arnhem Handball Cup 2026",
-  typ: "turnier",
-  ort: "Arnhem (Arnheim; NL)",
-  datum: "2026-04-04",
-  beschreibung: "Arnheim Handball Cup vom 04.04.-05.04.2026",
-  website: "https://www.arnhem-cup.nl/de",
-  games: [],
-  fotos: [],
-  bracket: {
-    groups: [
-      { name: "Gruppe A", advance: 2, teams: [
-        { name: "HSG Unterweser C I", pts: "" },
-        { name: "MTV Geismar",        pts: "" },
-        { name: "HSG Odenwald",       pts: "" },
-        { name: "Skørping Håndbold 1", pts: "" }
-      ]},
-      { name: "Gruppe B", advance: 2, teams: [
-        { name: "HSG Unterweser CII",  pts: "" },
-        { name: "SV Stöckheim",       pts: "" },
-        { name: "Skørping Håndbold 2", pts: "" },
-        { name: "ENköpings HF",       pts: "" }
-      ]}
+  name:"Arnhem Handball Cup 2026", typ:"turnier", ort:"Arnhem (Arnheim; NL)",
+  datum:"2026-04-04", beschreibung:"Arnheim Handball Cup vom 04.04.-05.04.2026",
+  website:"https://www.arnhem-cup.nl/de", games:[], fotos:[],
+  bracket:{
+    groups:[
+      {name:"Gruppe A", advance:2, teams:[
+        {name:"HSG Unterweser C I",pts:""},{name:"MTV Geismar",pts:""},
+        {name:"HSG Odenwald",pts:""},{name:"Sk\u00f8rping H\u00e5ndbold 1",pts:""}]},
+      {name:"Gruppe B", advance:2, teams:[
+        {name:"HSG Unterweser CII",pts:""},{name:"SV St\u00f6ckheim",pts:""},
+        {name:"Sk\u00f8rping H\u00e5ndbold 2",pts:""},{name:"Enk\u00f6pings HF",pts:""}]}
     ],
-    rounds: [
-      { name: "Vorrunde (05.04.)", matches: [
-        { teamHome: "#1A",          teamAway: "#4B",          scoreH: "", scoreA: "", info: "Veld 3 · 09:20" },
-        { teamHome: "#4A",          teamAway: "#1B",          scoreH: "", scoreA: "", info: "Veld 4 · 09:20" },
-        { teamHome: "#2A",          teamAway: "#3B",          scoreH: "", scoreA: "", info: "Veld 5 · 09:20" },
-        { teamHome: "#2B",          teamAway: "#3A",          scoreH: "", scoreA: "", info: "Veld 5 · 09:45" }
-      ]},
-      { name: "Halbfinale (05.04.)", matches: [
-        { teamHome: "Sieger 2.1", teamAway: "Sieger 2.4", scoreH: "", scoreA: "", info: "Veld 3 · 11:00" },
-        { teamHome: "Sieger 2.2", teamAway: "Sieger 2.3", scoreH: "", scoreA: "", info: "Veld 1 · 11:25" }
-      ]},
-      { name: "Finale (05.04.)", matches: [
-        { teamHome: "Sieger HF1", teamAway: "Sieger HF2", scoreH: "", scoreA: "", info: "Veld 1 · 12:40" }
-      ]},
-      { name: "Platz 3-4 (05.04.)", matches: [
-        { teamHome: "Verlierer HF1", teamAway: "Verlierer HF2", scoreH: "", scoreA: "", info: "Veld 2 · 12:40" }
-      ]},
-      { name: "Platz 5-6 (05.04.)", matches: [
-        { teamHome: "Sieger 3.3", teamAway: "Sieger 3.4", scoreH: "", scoreA: "", info: "Veld 3 · 12:40" }
-      ]},
-      { name: "Platz 7-8 (05.04.)", matches: [
-        { teamHome: "Verlierer 3.3", teamAway: "Verlierer 3.4", scoreH: "", scoreA: "", info: "Veld 5 · 13:05" }
-      ]}
+    rounds:[
+      {name:"Vorrunde (05.04.)", matches:[
+        {teamHome:"#1A",teamAway:"#4B",scoreH:"",scoreA:"",info:"Veld 3 · 09:20"},
+        {teamHome:"#4A",teamAway:"#1B",scoreH:"",scoreA:"",info:"Veld 4 · 09:20"},
+        {teamHome:"#2A",teamAway:"#3B",scoreH:"",scoreA:"",info:"Veld 5 · 09:20"},
+        {teamHome:"#2B",teamAway:"#3A",scoreH:"",scoreA:"",info:"Veld 5 · 09:45"}]},
+      {name:"Halbfinale (05.04.)", matches:[
+        {teamHome:"Sieger 2.1",teamAway:"Sieger 2.4",scoreH:"",scoreA:"",info:"Veld 3 · 11:00"},
+        {teamHome:"Sieger 2.2",teamAway:"Sieger 2.3",scoreH:"",scoreA:"",info:"Veld 1 · 11:25"}]},
+      {name:"Finale (05.04.)", matches:[
+        {teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:"",info:"Veld 1 · 12:40"}]},
+      {name:"Platz 3-4 (05.04.)", matches:[
+        {teamHome:"Verlierer HF1",teamAway:"Verlierer HF2",scoreH:"",scoreA:"",info:"Veld 2 · 12:40"}]},
+      {name:"Platz 5-6 (05.04.)", matches:[
+        {teamHome:"Sieger 3.3",teamAway:"Sieger 3.4",scoreH:"",scoreA:"",info:"Veld 3 · 12:40"}]},
+      {name:"Platz 7-8 (05.04.)", matches:[
+        {teamHome:"Verlierer 3.3",teamAway:"Verlierer 3.4",scoreH:"",scoreA:"",info:"Veld 5 · 13:05"}]}
     ]
   }
 };
-
 const NULIGA = {
   meetings: "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?displayTyp=vorrunde&displayDetail=meetings&championship=HRBN+25%2F26&group=432700",
   results:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/teamPortrait?teamtable=2118214&pageState=vorrunde&championship=HRBN+25%2F26&group=432700",
@@ -360,10 +342,10 @@ const SEED_2025 = [
   {id:"1771764536287",date:"2026-01-24",time:"14:30",round:"8. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG LiGra",scoreH:21,scoreA:28,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057684&etag=e5258905-38ce-4688-bef3-f6ce9eb0a2f7",note:"Leon 6 Tore (7M 1/1); Max 4 Tore; Tim 4 Tore; Rocket 3 Tore; Ben 2 Tore; Luca 1 Tor; Jonas 1 Tor (7M 1/3)"},
   {id:"1771764697194",date:"2026-02-14",time:"12:45",round:"9. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"Hagener SV",scoreH:30,scoreA:27,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057638&etag=18752851-b810-41fb-bddf-90c366430088",note:"Max 9 Tore; Leon 9 Tore; Rocket 6 Tore; Luca 5 Tore; Ben 1 Tor"},
   {id:"1771764924664",date:"2026-02-22",time:"10:00",round:"10. Spieltag",isHome:false,teamHome:"HG Bremerhaven",teamAway:"HSG Unterweser CII",scoreH:29,scoreA:25,venue:"Bremerhaven-Leherheide",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057601&etag=1a222e52-f810-49de-b397-ea42f3f71e7c",note:"Max 8 Tore; Leon 5 Tore (7M 0/1); Rocket 5 Tore; Tim 4 Tore; Luca 2 Tore; Ben 1 Tor (7M 0/1)"},
-  {id:"1771765073554",date:"2026-02-27",time:"17:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Schwanewede/NK. II",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
-  {id:"1771765155794",date:"2026-03-01",time:"14:15",round:"12. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser CII",venue:"Hagen, SH Schulzentrum",pdf:"",note:""},
-  {id:"1771765268746",date:"2026-03-07",time:"14:00",round:"13. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG RiGrOs",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
-  {id:"1771765440944",date:"2026-03-15",time:"12:45",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa-HVH",venue:"Großsporthalle Rodenkirchen",pdf:"",note:""},
+  {id:"1771765073554",date:"2026-02-27",time:"17:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Schwanewede/NK. II",scoreH:24,scoreA:34,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Rocket 5 Tore; Luca 5 Tore; Jonas 5 Tore; Ben 4 Tore (7M 0/1); Leon 3 Tore; Nils 1 Tor; Mats 1 Tor"},
+  {id:"1771765155794",date:"2026-03-01",time:"14:15",round:"12. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser CII",scoreH:35,scoreA:30,venue:"Hagen, SH Schulzentrum",pdf:"",note:"Jonas 11 Tore; Leon 7 Tore (7M 1/2); Mats 4 Tore; Rocket 4 Tore; Ben 3 Tore; Luca 1 Tor"},
+  {id:"1771765268746",date:"2026-03-07",time:"14:00",round:"13. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG RiGrOs",scoreH:27,scoreA:28,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Jonas 8 Tore; Leon 7 Tore (7M 1/2); Max 4 Tore; Rocket 3 Tore; Luca 3 Tore (7M 1/1); Tim 2 Tore"},
+  {id:"1771765440944",date:"2026-03-15",time:"12:45",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa-HVH",scoreH:27,scoreA:30,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Leon 8 Tore; Max 8 Tore (7M 0/1); Luca 5 Tore (7M 1/1); Ben 5 Tore; Rocket 1 Tor (7M 0/1)"},
   {id:"1771765522621",date:"2026-04-11",time:"16:30",round:"15. Spieltag",isHome:false,teamHome:"HSG Land Hadeln",teamAway:"HSG Unterweser CII",venue:"Otterndorf, SH Schulzentrum",pdf:"",note:""},
   {id:"1771765631051",date:"2026-04-18",time:"13:15",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG TVL/LTS/Spaden",venue:"Großsporthalle, Rodenkirchen",pdf:"",note:""},
 ];
@@ -406,12 +388,10 @@ function gsReadJSONP() {
       resolve(r);
     };
     const timer = setTimeout(()=>finish(null), 10000);
-    // Gibt flaches Objekt zurück: Felder aus data + _writeTs (fuer Verifikation in gsWrite)
     window[cb] = resp => {
       clearTimeout(timer);
-      if (!resp || !resp.ok) { finish(null); return; }
-      const out = Object.assign({}, resp.data, { _writeTs: resp._writeTs || null });
-      finish(out);
+      if(!resp||!resp.ok){finish(null);return;}
+      finish(Object.assign({},resp.data,{_writeTs:resp._writeTs||null}));
     };
     script.type="text/javascript"; script.async=true;
     script.src = GS_URL+"?action=read&callback="+cb+"&t="+Date.now();
@@ -421,28 +401,18 @@ function gsReadJSONP() {
 }
 
 async function gsWrite(data) {
-  // 1) Eindeutiger Schreib-Timestamp als Fingerprint
   const writeTs = Date.now();
-  const payload = { action: "write", data: { ...data, _writeTs: writeTs } };
-
-  // 2) POST senden (no-cors — wir erwarten keine Antwort, das ist OK)
+  const payload = { action:"write", data:{ ...data, _writeTs:writeTs } };
   try {
-    fetch(GS_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload),
-    });
-  } catch(e) { /* no-cors wirft nie, nur zur Sicherheit */ }
-
-  // 3) Warte bis zu 10s und prüfe per JSONP ob _writeTs im Sheet angekommen ist
+    fetch(GS_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload) });
+  } catch(e) {}
   const deadline = Date.now() + 10000;
-  while (Date.now() < deadline) {
+  while(Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 2500));
     const check = await gsReadJSONP();
-    if (check && check._writeTs === writeTs) return true;  // ✅ echt bestätigt
+    if(check && check._writeTs === writeTs) return true;
   }
-  return false;  // ❌ Timeout — Daten nicht verifiziert
+  return false;
 }
 
 // ═══════════════════════════════════════
@@ -453,7 +423,7 @@ async function syncAll() {
   const data = await gsReadJSONP();
 
   if (data && data.seasons && data.seasons["2025-26"]) {
-    // Sheets hat vollständige v5-Daten mit bekannter Saison
+    // Vollständige Daten aus Sheet
     STATE.seasons = data.seasons;
     STATE.highlights = data.highlights || [];
     let needsSave = false;
@@ -463,9 +433,8 @@ async function syncAll() {
       STATE.seasons["2025-26"].rank = 9;
       needsSave = true;
     }
-    // Arnhem Cup fehlt -> wiederherstellen
-    const hasArnhem = STATE.highlights.some(h => h.name && h.name.includes("Arnhem"));
-    if (!hasArnhem) {
+    // Arnhem Cup fehlt -> automatisch wiederherstellen
+    if (!STATE.highlights.some(h => h.name && h.name.includes("Arnhem"))) {
       STATE.highlights.push(ARNHEM_CUP);
       needsSave = true;
     }
@@ -473,18 +442,18 @@ async function syncAll() {
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
   } else if (data && data.seasons && Object.keys(data.seasons).length === 0) {
-    // Sheet leer (frisches Deployment) -> Seed einspielen
+    // Sheet leer -> alles neu aufbauen
     STATE.seasons["2025-26"].games = SEED_2025;
     STATE.seasons["2025-26"].rank = 9;
-    STATE.highlights = [];
-    LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+    STATE.highlights = [ARNHEM_CUP];
     await saveAll();
+    LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
   } else if (data && data.games) {
     // v4 Altdaten — migrieren
     STATE.seasons["2025-26"].games = data.games;
     STATE.seasons["2025-26"].rank = data.ownRank || 9;
-    STATE.highlights = [];
+    STATE.highlights = [ARNHEM_CUP];
     await saveAll();
     setBanner("&#9679; Daten migriert & verbunden", true);
   } else {
@@ -493,12 +462,12 @@ async function syncAll() {
     if (cached && cached.seasons && cached.seasons["2025-26"]) {
       STATE.seasons = cached.seasons;
       STATE.highlights = cached.highlights || [];
-      setBanner("&#9651; Offline — lokale Daten", false);
     } else {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank = 9;
-      setBanner("&#9651; Offline — Standarddaten", false);
+      STATE.highlights = [ARNHEM_CUP];
     }
+    setBanner("&#9651; Offline — lokale Daten", false);
   }
   renderActive();
 }
@@ -573,33 +542,19 @@ function rank()  { return STATE.seasons[STATE.activeSeason]?.rank  ?? null; }
 // ═══════════════════════════════════════
 function fmtDate(d) {
   if(!d) return "";
-  // Sheets liefert manchmal ein Date-Objekt oder ISO-String statt "YYYY-MM-DD"
   try {
-    let date;
-    if(typeof d === "string" && d.includes("-") && d.length <= 10) {
-      // Normales Format "YYYY-MM-DD" — direkt splitten, kein Date-Objekt nötig
-      const [y,m,t] = d.split("-");
-      if(y && m && t) return `${t.padStart(2,"0")}.${m.padStart(2,"0")}.${y}`;
+    if(typeof d==="string" && d.length===10 && d[4]==="-") {
+      const p=d.split("-"); return p[2]+"."+p[1]+"."+p[0];
     }
-    // Fallback: als Date parsen (für Sheets-Date-Objekte und ISO-Strings)
-    date = new Date(d);
-    if(isNaN(date.getTime())) return String(d);
-    const t = String(date.getDate()).padStart(2,"0");
-    const m = String(date.getMonth()+1).padStart(2,"0");
-    const y = date.getFullYear();
-    return `${t}.${m}.${y}`;
-  } catch(e) { return String(d); }
+    const dt=new Date(d);
+    if(!isNaN(dt.getTime())) return String(dt.getDate()).padStart(2,"0")+"."+String(dt.getMonth()+1).padStart(2,"0")+"."+dt.getFullYear();
+  } catch(e) {}
+  return String(d);
 }
 function fmtTime(t) {
   if(!t) return "";
-  // Sheets liefert Uhrzeit manchmal als Date-Objekt (1899-12-30T...)
-  if(typeof t === "string" && /^\d{1,2}:\d{2}/.test(t)) return t.substring(0,5);
-  try {
-    const d = new Date(t);
-    if(!isNaN(d.getTime())) {
-      return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-    }
-  } catch(e) {}
+  if(typeof t==="string" && t.length>=4 && t[2]===":") return t.substring(0,5);
+  try { const d=new Date(t); if(!isNaN(d.getTime())) return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); } catch(e) {}
   return String(t);
 }
 function isPlayed(g) { return g.scoreH !== undefined && g.scoreH !== null && g.scoreH !== ""; }
@@ -914,7 +869,7 @@ function renderHLBracket(hl) {
         const w2 = m.scoreA!==undefined && m.scoreA!=='' && parseInt(m.scoreA)>parseInt(m.scoreH);
         const played = m.scoreH!==undefined && m.scoreH!=='';
         h += `<div class="ko-match">
-          <div class="ko-match-label">${round.name}${m.info?' <span style="font-size:10px;color:var(--muted);font-weight:400">· '+m.info+'</span>':''}</div>
+          <div class="ko-match-label">${round.name}</div>
           <div class="ko-team ${w1?'win':''}">${m.teamHome||'TBD'}${played?' &nbsp; '+m.scoreH:''}</div>
           <div class="ko-team ${w2?'win':''}">${m.teamAway||'TBD'}${played?' &nbsp; '+m.scoreA:''}</div>
         </div>`;
@@ -934,42 +889,12 @@ function openBracketEditor(hlIdx) {
   const hl = STATE.highlights[hlIdx];
   const b = hl.bracket || {groups:[], rounds:[]};
   const groups = b.groups && b.groups.length ? b.groups : [
-    {name:"Gruppe A", advance:2, teams:[
-      {name:"HSG Unterweser C I",pts:""},
-      {name:"MTV Geismar",pts:""},
-      {name:"HSG Odenwald",pts:""},
-      {name:"Skørping Håndbold 1",pts:""}
-    ]},
-    {name:"Gruppe B", advance:2, teams:[
-      {name:"HSG Unterweser CII",pts:""},
-      {name:"SV Stöckheim",pts:""},
-      {name:"Skørping Håndbold 2",pts:""},
-      {name:"Enköpings HF",pts:""}
-    ]}
+    {name:"Gruppe A", advance:2, teams:[{name:"HSG Unterweser CII",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]},
+    {name:"Gruppe B", advance:2, teams:[{name:"",pts:""},{name:"",pts:""},{name:"",pts:""},{name:"",pts:""}]}
   ];
   const rounds = b.rounds && b.rounds.length ? b.rounds : [
-    {name:"Vorrunde (05.04.)", matches:[
-      {teamHome:"#1A",teamAway:"#4B",scoreH:"",scoreA:"",info:"Veld 3 · 09:20"},
-      {teamHome:"#4A",teamAway:"#1B",scoreH:"",scoreA:"",info:"Veld 4 · 09:20"},
-      {teamHome:"#2A",teamAway:"#3B",scoreH:"",scoreA:"",info:"Veld 5 · 09:20"},
-      {teamHome:"#2B",teamAway:"#3A",scoreH:"",scoreA:"",info:"Veld 5 · 09:45"},
-    ]},
-    {name:"Halbfinale (05.04.)", matches:[
-      {teamHome:"Sieger 2.1",teamAway:"Sieger 2.4",scoreH:"",scoreA:"",info:"Veld 3 · 11:00"},
-      {teamHome:"Sieger 2.2",teamAway:"Sieger 2.3",scoreH:"",scoreA:"",info:"Veld 1 · 11:25"},
-    ]},
-    {name:"Finale (05.04.)", matches:[
-      {teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:"",info:"Veld 1 · 12:40"},
-    ]},
-    {name:"Platz 3-4 (05.04.)", matches:[
-      {teamHome:"Verlierer HF1",teamAway:"Verlierer HF2",scoreH:"",scoreA:"",info:"Veld 2 · 12:40"},
-    ]},
-    {name:"Platz 5-6 (05.04.)", matches:[
-      {teamHome:"Sieger 3.3",teamAway:"Sieger 3.4",scoreH:"",scoreA:"",info:"Veld 3 · 12:40"},
-    ]},
-    {name:"Platz 7-8 (05.04.)", matches:[
-      {teamHome:"Verlierer 3.3",teamAway:"Verlierer 3.4",scoreH:"",scoreA:"",info:"Veld 5 · 13:05"},
-    ]},
+    {name:"Halbfinale", matches:[{teamHome:"1. Gr.A",teamAway:"2. Gr.B",scoreH:"",scoreA:""},{teamHome:"1. Gr.B",teamAway:"2. Gr.A",scoreH:"",scoreA:""}]},
+    {name:"Finale",    matches:[{teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:""}]},
   ];
 
   let gHtml = groups.map((g,gi) => `
