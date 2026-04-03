@@ -297,13 +297,17 @@ const ARNHEM_CUP = {
     groups:[
       {name:"Gruppe A", advance:2, teams:[
         {name:"HSG Unterweser C I",pts:""},{name:"MTV Geismar",pts:""},
-        {name:"HSG Odenwald",pts:""},{name:"Sk\u00f8rping H\u00e5ndbold 1",pts:""}]},
+        {name:"HSG Odenwald",pts:""},{name:"Skørping Håndbold 1",pts:""}]},
       {name:"Gruppe B", advance:2, teams:[
-        {name:"HSG Unterweser CII",pts:""},{name:"SV St\u00f6ckheim",pts:""},
-        {name:"Sk\u00f8rping H\u00e5ndbold 2",pts:""},{name:"Enk\u00f6pings HF",pts:""}]}
+        {name:"HSG Unterweser CII",pts:""},{name:"SV Stöckheim",pts:""},
+        {name:"Skørping Håndbold 2",pts:""},{name:"Enköpings HF",pts:""}]}
     ],
     rounds:[
-      {name:"Vorrunde (05.04.)", matches:[
+      {name:"Gruppenphase Sa. (04.04.)", matches:[
+        {teamHome:"HSG Unterweser CII",teamAway:"SV Stöckheim",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"},
+        {teamHome:"HSG Unterweser CII",teamAway:"Skørping Håndbold 2",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"},
+        {teamHome:"HSG Unterweser CII",teamAway:"Enköpings HF",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"}]},
+      {name:"Vorrunde So. (05.04.)", matches:[
         {teamHome:"#1A",teamAway:"#4B",scoreH:"",scoreA:"",info:"Veld 3 · 09:20"},
         {teamHome:"#4A",teamAway:"#1B",scoreH:"",scoreA:"",info:"Veld 4 · 09:20"},
         {teamHome:"#2A",teamAway:"#3B",scoreH:"",scoreA:"",info:"Veld 5 · 09:20"},
@@ -423,41 +427,58 @@ async function syncAll() {
   const data = await gsReadJSONP();
 
   if (data && data.seasons && data.seasons["2025-26"]) {
-    // Vollständige Daten aus Sheet
+    // ✅ Sheet hat Daten — Sheet gewinnt IMMER, nie überschreiben
     STATE.seasons = data.seasons;
     STATE.highlights = data.highlights || [];
     let needsSave = false;
-    // Spiele fehlen -> Seed einspielen
+
+    // Nur wenn Spielliste komplett leer -> einmalig SEED einspielen
     if (!STATE.seasons["2025-26"].games || STATE.seasons["2025-26"].games.length === 0) {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank = 9;
       needsSave = true;
     }
-    // Arnhem Cup fehlt -> automatisch wiederherstellen
-    if (!STATE.highlights.some(h => h.name && h.name.includes("Arnhem"))) {
-      STATE.highlights.push(ARNHEM_CUP);
+
+    // Arnhem Cup fehlt komplett -> nur Grundstruktur hinzufügen, KEINE Spieldaten überschreiben
+    const arnIdx = STATE.highlights.findIndex(h => h.name && h.name.includes("Arnhem"));
+    if (arnIdx === -1) {
+      // Noch gar nicht vorhanden -> neu anlegen
+      STATE.highlights.push(JSON.parse(JSON.stringify(ARNHEM_CUP)));
       needsSave = true;
+    } else {
+      // Vorhanden -> nur bracket-Struktur ergänzen falls komplett leer, Spiele/Fotos NICHT anfassen
+      const arn = STATE.highlights[arnIdx];
+      if (!arn.bracket || !arn.bracket.rounds || arn.bracket.rounds.length === 0) {
+        arn.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
+        needsSave = true;
+      }
     }
+
     if (needsSave) await saveAll();
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
+
   } else if (data && data.seasons && Object.keys(data.seasons).length === 0) {
-    // Sheet leer -> alles neu aufbauen
+    // Sheet leer -> Initialdaten einspielen
     STATE.seasons["2025-26"].games = SEED_2025;
     STATE.seasons["2025-26"].rank = 9;
-    STATE.highlights = [ARNHEM_CUP];
+    STATE.highlights = [JSON.parse(JSON.stringify(ARNHEM_CUP))];
     await saveAll();
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
+
   } else if (data && data.games) {
-    // v4 Altdaten — migrieren
+    // v4 Altdaten — einmalig migrieren
     STATE.seasons["2025-26"].games = data.games;
     STATE.seasons["2025-26"].rank = data.ownRank || 9;
-    STATE.highlights = [ARNHEM_CUP];
+    if (!STATE.highlights.some(h => h.name && h.name.includes("Arnhem"))) {
+      STATE.highlights.push(JSON.parse(JSON.stringify(ARNHEM_CUP)));
+    }
     await saveAll();
     setBanner("&#9679; Daten migriert & verbunden", true);
+
   } else {
-    // Offline-Fallback
+    // Offline-Fallback — localStorage nutzen
     const cached = LS.get("hsg_v5");
     if (cached && cached.seasons && cached.seasons["2025-26"]) {
       STATE.seasons = cached.seasons;
@@ -465,7 +486,7 @@ async function syncAll() {
     } else {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank = 9;
-      STATE.highlights = [ARNHEM_CUP];
+      STATE.highlights = [JSON.parse(JSON.stringify(ARNHEM_CUP))];
     }
     setBanner("&#9651; Offline — lokale Daten", false);
   }
