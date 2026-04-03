@@ -932,6 +932,12 @@ function openBracketEditor(hlIdx) {
   `;
 
   document.getElementById("hlModal").querySelector(".btn-p").onclick = saveBracket;
+  // Fotoalbum-Textarea nach dem Rendern befüllen (vermeidet \n-Escaping im Template)
+  const faEl = document.getElementById("hlFotoalbum");
+  if(faEl) {
+    const alben = Array.isArray(hl.fotoalbum) ? hl.fotoalbum : (hl.fotoalbum ? [hl.fotoalbum] : []);
+    faEl.value = alben.join("\n");
+  }
   openModal("hlModal");
 }
 
@@ -1049,7 +1055,7 @@ function showHLModal(hl) {
     <label>Offizielle Website (optional)</label>
     <input id="hlWebsite" placeholder="https://www.arnhem-cup.nl/de" value="${hl.website||''}"/>
     <label>&#128247; Fotoalben (Google Fotos, ein Link pro Zeile)</label>
-    <textarea id="hlFotoalbum" rows="3" placeholder="https://photos.app.goo.gl/...&#10;https://photos.app.goo.gl/...">${(hl.fotoalbum||[]).join ? (hl.fotoalbum||[]).join("\n") : (hl.fotoalbum||"")}</textarea>
+    <textarea id="hlFotoalbum" rows="3" placeholder="https://photos.app.goo.gl/..."></textarea>
     <div style="font-size:10px;color:var(--muted);margin-top:-4px;margin-bottom:8px">
       Mehrere Alben möglich · Album öffnen → Teilen → Link kopieren → hier einfügen
     </div>
@@ -1076,6 +1082,12 @@ function showHLModal(hl) {
       <strong style="color:var(--amber)">Wichtig:</strong> Drive-Links werden automatisch in direkte Bildlinks umgewandelt.
     </div>
   `;
+  // Fotoalbum-Textarea nach dem Rendern befüllen (vermeidet \n-Escaping im Template)
+  const faEl = document.getElementById("hlFotoalbum");
+  if(faEl) {
+    const alben = Array.isArray(hl.fotoalbum) ? hl.fotoalbum : (hl.fotoalbum ? [hl.fotoalbum] : []);
+    faEl.value = alben.join("\n");
+  }
   openModal("hlModal");
 }
 
@@ -1155,6 +1167,12 @@ function showGameModal(g) {
     <textarea id="gNote" rows="2">${g.note||''}</textarea>
   `;
   document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHLGame;
+  // Fotoalbum-Textarea nach dem Rendern befüllen (vermeidet \n-Escaping im Template)
+  const faEl = document.getElementById("hlFotoalbum");
+  if(faEl) {
+    const alben = Array.isArray(hl.fotoalbum) ? hl.fotoalbum : (hl.fotoalbum ? [hl.fotoalbum] : []);
+    faEl.value = alben.join("\n");
+  }
   openModal("hlModal");
 }
 function saveHLGame() {
