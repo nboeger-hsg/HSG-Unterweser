@@ -850,42 +850,52 @@ function renderHLSpiele(hl, idx) {
 
 function bereinigeDuplikate(hlIdx) {
   const hl = STATE.highlights[hlIdx];
-  if(!hl || !hl.games) return;
-  const vorher = hl.games.length;
+  if(!hl) { toast("Fehler: Highlight nicht gefunden (idx=" + hlIdx + ")"); return; }
+  if(!hl.games || hl.games.length === 0) { toast("Keine Spiele vorhanden"); return; }
 
-  // Robustere Bereinigung: normalisiert Teamnamen vor dem Vergleich
-  const normalize = s => (s||"").trim().toLowerCase().replace(/\s+/g," ");
+  const vorher = hl.games.length;
+  toast("Bereinige " + vorher + " Einträge...");
+
+  const normalize = s => (s||"").trim().toLowerCase().replace(/\s+/g, " ");
   const seen = new Map();
   const result = [];
+
   hl.games.forEach(g => {
     const key = [normalize(g.teamHome), normalize(g.teamAway)].sort().join("||");
-    if(!seen.has(key)) {
+    if (!seen.has(key)) {
       seen.set(key, result.length);
-      result.push(g);
+      result.push(Object.assign({}, g)); // Kopie
     } else {
-      // Bestehendes Duplikat: das mit Ergebnis behalten, oder das mit mehr Daten
       const prevIdx = seen.get(key);
       const prev = result[prevIdx];
-      const prevHasScore = prev.scoreH !== undefined && prev.scoreH !== null && prev.scoreH !== "";
-      const currHasScore = g.scoreH !== undefined && g.scoreH !== null && g.scoreH !== "";
-      const currBetter = (currHasScore && !prevHasScore) ||
-                         (currHasScore && prevHasScore && (g.note||"").length > (prev.note||"").length);
-      if(currBetter) result[prevIdx] = g;
+      const prevScore = prev.scoreH !== undefined && prev.scoreH !== null && prev.scoreH !== "";
+      const currScore = g.scoreH  !== undefined && g.scoreH  !== null && g.scoreH  !== "";
+      // Behalte das Spiel mit mehr Daten
+      const currBetter = (currScore && !prevScore) ||
+        (currScore && prevScore && (g.note||"").length > (prev.note||"").length);
+      if (currBetter) result[prevIdx] = Object.assign({}, g);
     }
   });
 
-  hl.games = result;
-  const nachher = hl.games.length;
+  const nachher = result.length;
   const entfernt = vorher - nachher;
-  if(entfernt > 0) {
-    saveAll().then(() => {
-      toast("&#9989; " + entfernt + " Duplikat(e) entfernt — " + nachher + " Spiele verbleiben");
-      renderHighlights();
-    });
-  } else {
-    toast("Keine Duplikate gefunden (" + nachher + " Spiele)");
-    renderHighlights();
-  }
+
+  // Direkt in STATE schreiben und sofort lokal speichern
+  STATE.highlights[hlIdx].games = result;
+  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+
+  // Sofort neu rendern damit Nutzer Ergebnis sieht
+  renderHighlights();
+  toast(entfernt > 0
+    ? "&#9989; " + entfernt + " Duplikat(e) entfernt (" + nachher + " verbleiben) — wird gespeichert..."
+    : "Keine Duplikate. " + nachher + " Spiele, alle eindeutig.");
+
+  // Dann asynchron ins Sheet schreiben
+  saveAll().then(ok => {
+    toast(ok
+      ? "&#9989; Gespeichert: " + nachher + " Spiele"
+      : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen");
+  });
 }
 
 function renderHLTorjaeger(hl) {
