@@ -805,15 +805,34 @@ function hlTab(idx, tab) {
   document.getElementById("hl-content-"+idx).innerHTML = c;
 }
 
+function dedupGames(games) {
+  // Entfernt Duplikate anhand Teamkombination — behält jeweils den neueren Eintrag
+  const seen = new Map();
+  games.forEach((g, i) => {
+    const key = [g.teamHome, g.teamAway].sort().join("||");
+    if(!seen.has(key)) {
+      seen.set(key, i);
+    } else {
+      // Neueren behalten: den mit Ergebnis bevorzugen
+      const prevIdx = seen.get(key);
+      const prev = games[prevIdx];
+      if(g.scoreH !== undefined && prev.scoreH === undefined) seen.set(key, i);
+    }
+  });
+  return Array.from(seen.values()).map(i => games[i]);
+}
+
 function renderHLSpiele(hl, idx) {
-  const gs = hl.games||[];
+  const gs = dedupGames(hl.games||[]);
   let h = "";
   if(!gs.length) {
     h += `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Spiele eingetragen.</div>`;
   } else {
-    gs.forEach((g,gi) => {
+    gs.forEach((g, gi) => {
+      // Originalen Index für editHLGame ermitteln
+      const origIdx = (hl.games||[]).findIndex(x => x.id === g.id);
       const editBtn = STATE.isAdmin ?
-        `<button class="btn btn-sm" style="margin-top:6px;width:auto;padding:4px 10px" onclick="editHLGame(${idx},${gi})">&#9998;</button>` : "";
+        `<button class="btn btn-sm" style="margin-top:6px;width:auto;padding:4px 10px" onclick="editHLGame(${idx},${origIdx})">&#9998;</button>` : "";
       h += gameCardHTML(g) + (STATE.isAdmin ? editBtn : "");
     });
   }
@@ -822,7 +841,7 @@ function renderHLSpiele(hl, idx) {
 }
 
 function renderHLTorjaeger(hl) {
-  const scorers = parseScorers(hl.games||[]);
+  const scorers = parseScorers(dedupGames(hl.games||[]));
   if(!scorers.length) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Torschützen.</div>`;
   const maxT = scorers[0].tore;
   const medals = ["&#129351;","&#129352;","&#129353;"];
@@ -844,7 +863,7 @@ function calcGroupTable(group, allGames) {
   (group.teams||[]).forEach(t => {
     stats[t.name] = { name:t.name, pts:0, wins:0, draws:0, losses:0, gf:0, ga:0, played:0 };
   });
-  allGames.filter(g => isPlayed(g)).forEach(g => {
+  dedupGames(allGames).filter(g => isPlayed(g)).forEach(g => {
     const h = g.teamHome, a = g.teamAway;
     if(!stats[h] && !stats[a]) return; // Nicht in dieser Gruppe
     if(stats[h]) { stats[h].gf+=g.scoreH; stats[h].ga+=g.scoreA; stats[h].played++; }
@@ -1394,6 +1413,12 @@ function openGruppenEingabe(hlIdx) {
   openModal("hlModal");
 }
 
+function sameMatch(g, tH, tA) {
+  // Prüft ob ein Spiel dieselbe Paarung ist (egal welche Richtung)
+  return (g.teamHome === tH && g.teamAway === tA) ||
+         (g.teamHome === tA && g.teamAway === tH);
+}
+
 function saveGruppenEingabe() {
   const hlIdx = parseInt(document.getElementById("geHlIdx").value);
   const hl = STATE.highlights[hlIdx];
@@ -1401,36 +1426,50 @@ function saveGruppenEingabe() {
 
   const rows = document.getElementById("geRows").querySelectorAll("[data-th]");
   rows.forEach(row => {
-    const tH   = row.dataset.th;
-    const tA   = row.dataset.ta;
-    const grp  = row.dataset.grp;
-    const exId = row.dataset.eid;
-    const shEl = row.querySelector(".ge-sh");
-    const saEl = row.querySelector(".ge-sa");
+    const tH     = row.dataset.th;
+    const tA     = row.dataset.ta;
+    const grp    = row.dataset.grp;
+    const shEl   = row.querySelector(".ge-sh");
+    const saEl   = row.querySelector(".ge-sa");
     const noteEl = row.querySelector(".ge-note");
     const sh = shEl && shEl.value !== "" ? parseInt(shEl.value) : undefined;
     const sa = saEl && saEl.value !== "" ? parseInt(saEl.value) : undefined;
     const note = noteEl ? noteEl.value.trim() : "";
 
-    if(sh === undefined && sa === undefined) return; // Leer lassen
+    if(sh === undefined && sa === undefined) return; // Leer — nicht speichern
+
+    // Bestehendes Spiel mit dieser Paarung suchen (egal ob über addHLGame oder frühere Eingabe)
+    const existIdx = hl.games.findIndex(g => sameMatch(g, tH, tA));
+    const existGame = existIdx !== -1 ? hl.games[existIdx] : null;
+
+    // Tore korrekt zuordnen je nach Richtung des bestehenden Eintrags
+    let finalScoreH = sh, finalScoreA = sa;
+    let finalTeamH = tH, finalTeamA = tA;
+    if(existGame && existGame.teamHome === tA) {
+      // Bestehendes Spiel hat umgekehrte Richtung → anpassen
+      finalScoreH = sa; finalScoreA = sh;
+      finalTeamH = tA; finalTeamA = tH;
+    }
 
     const game = {
-      id: exId || Date.now().toString() + Math.random().toString(36).slice(2,6),
+      id: existGame ? existGame.id : (Date.now().toString() + Math.random().toString(36).slice(2,6)),
       round: grp,
-      date: "", time: "",
-      teamHome: tH, teamAway: tA,
-      isHome: tH.includes("Unterweser"),
-      venue: "Sportcentrum Valkenhuizen",
-      scoreH: sh, scoreA: sa,
-      note: note, pdf: ""
+      date:  existGame ? (existGame.date||"") : "",
+      time:  existGame ? (existGame.time||"") : "",
+      teamHome: finalTeamH,
+      teamAway: finalTeamA,
+      isHome: finalTeamH.includes("Unterweser"),
+      venue: existGame ? (existGame.venue||"Sportcentrum Valkenhuizen") : "Sportcentrum Valkenhuizen",
+      scoreH: finalScoreH,
+      scoreA: finalScoreA,
+      note: note || (existGame ? (existGame.note||"") : ""),
+      pdf: existGame ? (existGame.pdf||"") : ""
     };
 
-    if(exId) {
-      const idx = hl.games.findIndex(g => g.id === exId);
-      if(idx !== -1) hl.games[idx] = game;
-      else hl.games.push(game);
+    if(existIdx !== -1) {
+      hl.games[existIdx] = game; // Update
     } else {
-      hl.games.push(game);
+      hl.games.push(game);       // Neu
     }
   });
 
