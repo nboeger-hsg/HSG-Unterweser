@@ -768,9 +768,10 @@ function renderHighlights() {
           <div id="hl-content-${idx}">
             ${renderHLSpiele(hl, idx)}
           </div>
-          ${STATE.isAdmin?`<div style="margin-top:10px;display:flex;gap:8px">
+          ${STATE.isAdmin?`<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g btn-sm" style="margin:0" onclick="editHighlight(${idx})">&#9998; Bearbeiten</button>
             <button class="btn btn-d btn-sm" style="margin:0" onclick="deleteHighlight(${idx})">&#128465; Löschen</button>
+            <button class="btn btn-d btn-sm" style="margin:0;background:rgba(240,165,0,.15);color:var(--amber);border-color:rgba(240,165,0,.3)" onclick="bereinigeDuplikate(${idx})">&#9888; Duplikate bereinigen</button>
           </div>`:''}
         </div>
       </div>`;
@@ -838,14 +839,11 @@ function renderHLSpiele(hl, idx) {
   }
   if(STATE.isAdmin) {
     h += `<button class="btn btn-g btn-sm" onclick="addHLGame(${idx})">&#43; Spiel hinzufügen</button>`;
-    // Bereinigungsbutton nur anzeigen wenn Duplikate vorhanden
     const allGames = hl.games||[];
-    const deduped = dedupGames(allGames);
-    if(allGames.length > deduped.length) {
-      h += `<button class="btn btn-d btn-sm" style="margin-top:4px" onclick="bereinigeDuplikate(${idx})">
-        &#9888; ${allGames.length - deduped.length} Duplikat${allGames.length-deduped.length>1?'e':''} entfernen
-      </button>`;
-    }
+    // Button immer anzeigen — zeigt Anzahl oder "Keine Duplikate"
+    h += `<button class="btn btn-d btn-sm" style="margin-top:4px" onclick="bereinigeDuplikate(${idx})">
+      &#9888; Duplikate bereinigen (${allGames.length} Einträge)
+    </button>`;
   }
   return h;
 }
@@ -854,12 +852,40 @@ function bereinigeDuplikate(hlIdx) {
   const hl = STATE.highlights[hlIdx];
   if(!hl || !hl.games) return;
   const vorher = hl.games.length;
-  hl.games = dedupGames(hl.games);
-  const nachher = hl.games.length;
-  saveAll().then(() => {
-    toast("&#9989; " + (vorher-nachher) + " Duplikat(e) entfernt");
-    renderHighlights();
+
+  // Robustere Bereinigung: normalisiert Teamnamen vor dem Vergleich
+  const normalize = s => (s||"").trim().toLowerCase().replace(/\s+/g," ");
+  const seen = new Map();
+  const result = [];
+  hl.games.forEach(g => {
+    const key = [normalize(g.teamHome), normalize(g.teamAway)].sort().join("||");
+    if(!seen.has(key)) {
+      seen.set(key, result.length);
+      result.push(g);
+    } else {
+      // Bestehendes Duplikat: das mit Ergebnis behalten, oder das mit mehr Daten
+      const prevIdx = seen.get(key);
+      const prev = result[prevIdx];
+      const prevHasScore = prev.scoreH !== undefined && prev.scoreH !== null && prev.scoreH !== "";
+      const currHasScore = g.scoreH !== undefined && g.scoreH !== null && g.scoreH !== "";
+      const currBetter = (currHasScore && !prevHasScore) ||
+                         (currHasScore && prevHasScore && (g.note||"").length > (prev.note||"").length);
+      if(currBetter) result[prevIdx] = g;
+    }
   });
+
+  hl.games = result;
+  const nachher = hl.games.length;
+  const entfernt = vorher - nachher;
+  if(entfernt > 0) {
+    saveAll().then(() => {
+      toast("&#9989; " + entfernt + " Duplikat(e) entfernt — " + nachher + " Spiele verbleiben");
+      renderHighlights();
+    });
+  } else {
+    toast("Keine Duplikate gefunden (" + nachher + " Spiele)");
+    renderHighlights();
+  }
 }
 
 function renderHLTorjaeger(hl) {
