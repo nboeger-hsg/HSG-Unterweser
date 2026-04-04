@@ -838,24 +838,79 @@ function renderHLTorjaeger(hl) {
   </div>`).join("");
 }
 
+function calcGroupTable(group, allGames) {
+  // Berechnet Punkte automatisch aus den Spielen
+  const stats = {};
+  (group.teams||[]).forEach(t => {
+    stats[t.name] = { name:t.name, pts:0, wins:0, draws:0, losses:0, gf:0, ga:0, played:0 };
+  });
+  allGames.filter(g => isPlayed(g)).forEach(g => {
+    const h = g.teamHome, a = g.teamAway;
+    if(!stats[h] && !stats[a]) return; // Nicht in dieser Gruppe
+    if(stats[h]) { stats[h].gf+=g.scoreH; stats[h].ga+=g.scoreA; stats[h].played++; }
+    if(stats[a]) { stats[a].gf+=g.scoreA; stats[a].ga+=g.scoreH; stats[a].played++; }
+    if(g.scoreH > g.scoreA) {
+      if(stats[h]) { stats[h].pts+=2; stats[h].wins++; }
+      if(stats[a]) { stats[a].losses++; }
+    } else if(g.scoreH < g.scoreA) {
+      if(stats[a]) { stats[a].pts+=2; stats[a].wins++; }
+      if(stats[h]) { stats[h].losses++; }
+    } else {
+      if(stats[h]) { stats[h].pts+=1; stats[h].draws++; }
+      if(stats[a]) { stats[a].pts+=1; stats[a].draws++; }
+    }
+  });
+  // Sortieren: Punkte → Tordifferenz → Tore
+  return Object.values(stats).sort((a,b) =>
+    (b.pts-a.pts) || ((b.gf-b.ga)-(a.gf-a.ga)) || (b.gf-a.gf)
+  );
+}
+
 function renderHLBracket(hl) {
   if(!hl.bracket) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch kein Turnierbaum eingetragen.${STATE.isAdmin?` <button class="btn btn-g btn-sm" style="margin:0;width:auto;display:inline-block" onclick="openBracketEditor(${STATE.highlights.indexOf(hl)})">&#9998; Jetzt anlegen</button>`:''}</div>`;
 
+  const hlIdx = STATE.highlights.indexOf(hl);
   let h = '';
 
-  // GRUPPEN
+  // GRUPPEN — automatische Tabellenberechnung
   const groups = hl.bracket.groups||[];
   if(groups.length) {
     h += `<div class="group-grid">`;
     groups.forEach(g => {
+      const table = calcGroupTable(g, hl.games||[]);
+      const hasPlayed = table.some(t => t.played > 0);
       h += `<div class="group-box"><div class="group-title">${g.name}</div>`;
-      (g.teams||[]).forEach((t,i) => {
-        const adv = i < (g.advance||2);
-        h += `<div class="group-team ${adv?'advance':''}">${adv?'&#9650; ':''}${t.name}<span style="color:var(--muted)">${t.pts!==undefined?t.pts+' Pkt':''}</span></div>`;
-      });
+      if(hasPlayed) {
+        // Tabellenkopf
+        h += `<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--b1);margin-bottom:2px;letter-spacing:.5px">
+          <span>TEAM</span><span style="display:flex;gap:8px"><span>Sp</span><span>Pkt</span><span>TD</span></span></div>`;
+        table.forEach((t,i) => {
+          const adv = i < (g.advance||2);
+          const td = t.gf - t.ga;
+          const isOurs = t.name.includes("Unterweser");
+          h += `<div class="group-team ${adv?'advance':''}" style="${isOurs?'background:rgba(90,174,255,.06);border-radius:4px;':''}">
+            <span>${adv?'&#9650; ':''}${t.name}</span>
+            <span style="display:flex;gap:8px;font-size:11px">
+              <span style="color:var(--muted)">${t.played}</span>
+              <span style="font-weight:700;color:${adv?'var(--green)':'var(--white)'}">${t.pts}</span>
+              <span style="color:${td>=0?'var(--green)':'var(--red)'}">${td>0?'+':''}${td}</span>
+            </span>
+          </div>`;
+        });
+      } else {
+        // Noch keine Spiele — Teams nur auflisten
+        (g.teams||[]).forEach((t,i) => {
+          const adv = i < (g.advance||2);
+          h += `<div class="group-team ${adv?'advance':''}">${adv?'&#9650; ':''}${t.name}<span style="color:var(--muted);font-size:10px">–</span></div>`;
+        });
+      }
       h += `</div>`;
     });
     h += `</div>`;
+    // Schnelleingabe-Button für Admin
+    if(STATE.isAdmin) {
+      h += `<button class="btn btn-g btn-sm" style="margin-bottom:8px" onclick="openGruppenEingabe(${hlIdx})">&#9998; Gruppenspiele eintragen</button>`;
+    }
   }
 
   // KO-RUNDEN
@@ -1265,6 +1320,127 @@ document.addEventListener("keydown", e=>{
   if(e.key==="ArrowRight") lbMove(1);
   if(e.key==="Escape")     lbClose();
 });
+
+// ═══════════════════════════════════════
+// GRUPPENSPIELE SCHNELLEINGABE
+// ═══════════════════════════════════════
+function openGruppenEingabe(hlIdx) {
+  const hl = STATE.highlights[hlIdx];
+  const groups = (hl.bracket && hl.bracket.groups) || [];
+
+  // Alle Gruppe-Paarungen generieren die noch nicht als Spiel erfasst sind
+  // Oder bereits erfasste Spiele zum Bearbeiten anzeigen
+  let rows = "";
+  const existingGames = hl.games || [];
+
+  groups.forEach(grp => {
+    const teams = grp.teams || [];
+    rows += `<div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;
+      color:var(--blue2);margin:10px 0 6px;letter-spacing:.5px">${grp.name}</div>`;
+
+    // Alle Paarungen in der Gruppe
+    for(let i=0; i<teams.length; i++) {
+      for(let j=i+1; j<teams.length; j++) {
+        const tH = teams[i].name, tA = teams[j].name;
+        // Existierendes Spiel suchen
+        const ex = existingGames.find(g =>
+          (g.teamHome===tH && g.teamAway===tA) ||
+          (g.teamHome===tA && g.teamAway===tH)
+        );
+        const sH = ex ? (ex.teamHome===tH ? (ex.scoreH??'') : (ex.scoreA??'')) : '';
+        const sA = ex ? (ex.teamHome===tH ? (ex.scoreA??'') : (ex.scoreH??'')) : '';
+        const exId = ex ? ex.id : '';
+        const isOurs = tH.includes("Unterweser") || tA.includes("Unterweser");
+
+        rows += `<div style="background:${isOurs?'rgba(90,174,255,.06)':'var(--bg3)'};
+          border:1px solid var(--b${isOurs?'2':'1'});border-radius:8px;
+          padding:8px 10px;margin-bottom:6px"
+          data-eid="${exId}" data-th="${tH}" data-ta="${tA}" data-grp="${grp.name}">
+          <div style="font-size:11px;color:var(--text);margin-bottom:6px;font-weight:${isOurs?700:400}">
+            ${tH} vs ${tA}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" min="0" placeholder="–"
+              style="width:52px;text-align:center;padding:6px;font-size:16px;font-weight:700"
+              class="ge-sh" value="${sH}"/>
+            <span style="color:var(--muted);font-weight:700">:</span>
+            <input type="number" min="0" placeholder="–"
+              style="width:52px;text-align:center;padding:6px;font-size:16px;font-weight:700"
+              class="ge-sa" value="${sA}"/>
+            <span style="font-size:10px;color:var(--muted);flex:1;text-align:right">
+              ${sH!==''&&sA!==''?'&#9989; eingetragen':'ausstehend'}
+            </span>
+          </div>
+          ${isOurs?`<div style="margin-top:6px">
+            <input placeholder="Torschützen: Leon 5 Tore; Max 3 Tore (optional)"
+              style="font-size:11px;padding:5px 8px" class="ge-note"
+              value="${ex&&ex.note?ex.note:''}"/>
+          </div>`:''}
+        </div>`;
+      }
+    }
+  });
+
+  document.getElementById("hlModalContent").innerHTML = `
+    <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;
+      color:var(--white);margin-bottom:4px">&#9998; Gruppenspiele</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
+      Ergebnisse eintragen — Tabelle wird automatisch berechnet
+    </div>
+    <div id="geRows">${rows}</div>
+    <input type="hidden" id="geHlIdx" value="${hlIdx}"/>
+  `;
+  document.getElementById("hlModal").querySelector(".btn-p").onclick = saveGruppenEingabe;
+  openModal("hlModal");
+}
+
+function saveGruppenEingabe() {
+  const hlIdx = parseInt(document.getElementById("geHlIdx").value);
+  const hl = STATE.highlights[hlIdx];
+  if(!hl.games) hl.games = [];
+
+  const rows = document.getElementById("geRows").querySelectorAll("[data-th]");
+  rows.forEach(row => {
+    const tH   = row.dataset.th;
+    const tA   = row.dataset.ta;
+    const grp  = row.dataset.grp;
+    const exId = row.dataset.eid;
+    const shEl = row.querySelector(".ge-sh");
+    const saEl = row.querySelector(".ge-sa");
+    const noteEl = row.querySelector(".ge-note");
+    const sh = shEl && shEl.value !== "" ? parseInt(shEl.value) : undefined;
+    const sa = saEl && saEl.value !== "" ? parseInt(saEl.value) : undefined;
+    const note = noteEl ? noteEl.value.trim() : "";
+
+    if(sh === undefined && sa === undefined) return; // Leer lassen
+
+    const game = {
+      id: exId || Date.now().toString() + Math.random().toString(36).slice(2,6),
+      round: grp,
+      date: "", time: "",
+      teamHome: tH, teamAway: tA,
+      isHome: tH.includes("Unterweser"),
+      venue: "Sportcentrum Valkenhuizen",
+      scoreH: sh, scoreA: sa,
+      note: note, pdf: ""
+    };
+
+    if(exId) {
+      const idx = hl.games.findIndex(g => g.id === exId);
+      if(idx !== -1) hl.games[idx] = game;
+      else hl.games.push(game);
+    } else {
+      hl.games.push(game);
+    }
+  });
+
+  document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHighlight;
+  saveAll().then(() => {
+    toast("&#9989; Gruppenspiele gespeichert");
+    closeModal("hlModal");
+    renderHighlights();
+  });
+}
 
 // ═══════════════════════════════════════
 // ADMIN / ENTER
