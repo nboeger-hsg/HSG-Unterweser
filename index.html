@@ -836,8 +836,30 @@ function renderHLSpiele(hl, idx) {
       h += gameCardHTML(g) + (STATE.isAdmin ? editBtn : "");
     });
   }
-  if(STATE.isAdmin) h += `<button class="btn btn-g btn-sm" onclick="addHLGame(${idx})">&#43; Spiel hinzufügen</button>`;
+  if(STATE.isAdmin) {
+    h += `<button class="btn btn-g btn-sm" onclick="addHLGame(${idx})">&#43; Spiel hinzufügen</button>`;
+    // Bereinigungsbutton nur anzeigen wenn Duplikate vorhanden
+    const allGames = hl.games||[];
+    const deduped = dedupGames(allGames);
+    if(allGames.length > deduped.length) {
+      h += `<button class="btn btn-d btn-sm" style="margin-top:4px" onclick="bereinigeDuplikate(${idx})">
+        &#9888; ${allGames.length - deduped.length} Duplikat${allGames.length-deduped.length>1?'e':''} entfernen
+      </button>`;
+    }
+  }
   return h;
+}
+
+function bereinigeDuplikate(hlIdx) {
+  const hl = STATE.highlights[hlIdx];
+  if(!hl || !hl.games) return;
+  const vorher = hl.games.length;
+  hl.games = dedupGames(hl.games);
+  const nachher = hl.games.length;
+  saveAll().then(() => {
+    toast("&#9989; " + (vorher-nachher) + " Duplikat(e) entfernt");
+    renderHighlights();
+  });
 }
 
 function renderHLTorjaeger(hl) {
