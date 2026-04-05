@@ -437,9 +437,11 @@ async function syncAll() {
       const sheetRounds = (arn.bracket && arn.bracket.rounds) || [];
       const codeRounds  = ARNHEM_CUP.bracket.rounds;
       // Bracket aus Code übernehmen wenn weniger Runden oder weniger Ergebnisse als im Code
-      const sheetScored = sheetRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
-      const codeScored  = codeRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
-      if (sheetRounds.length < codeRounds.length || sheetScored < codeScored) {
+      const sheetMatches = sheetRounds.reduce((n,r)=>n+(r.matches||[]).length,0);
+      const codeMatches  = codeRounds.reduce((n,r)=>n+(r.matches||[]).length,0);
+      const sheetScored  = sheetRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
+      const codeScored   = codeRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
+      if (sheetRounds.length < codeRounds.length || sheetMatches < codeMatches || sheetScored < codeScored) {
         // Code hat mehr Daten → Runden aus Code übernehmen, aber Torschützen-Notes aus Sheet erhalten
         arn.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
         await saveAll();
@@ -877,6 +879,18 @@ function renderHLSpiele(hl, idx) {
   return h;
 }
 
+function bracketAusCodeLaden(hlIdx) {
+  const hl = STATE.highlights[hlIdx];
+  if(!hl) return;
+  // Nur das bracket überschreiben, games/fotos/platzierung bleiben erhalten
+  hl.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
+  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  saveAll().then(ok => {
+    toast(ok ? "&#9989; Bracket aktualisiert und gespeichert" : "&#9651; Bracket lokal aktualisiert");
+    renderHighlights();
+  });
+}
+
 function diagnoseDuplikate(hlIdx) {
   const hl = STATE.highlights[hlIdx];
   if(!hl || !hl.games) { alert("Keine Spiele"); return; }
@@ -1251,7 +1265,11 @@ function renderHLBracket(hl) {
     h += `</div>`;
   }
 
-  if(STATE.isAdmin) h += `<button class="btn btn-g btn-sm" style="margin-top:6px" onclick="openBracketEditor(${STATE.highlights.indexOf(hl)})">&#9998; Turnierbaum bearbeiten</button>`;
+  if(STATE.isAdmin) {
+    const hlIdxForBtn = STATE.highlights.indexOf(hl);
+    h += `<button class="btn btn-g btn-sm" style="margin-top:6px" onclick="openBracketEditor(${hlIdxForBtn})">&#9998; Turnierbaum bearbeiten</button>`;
+    h += `<button class="btn btn-d btn-sm" style="margin-top:4px;background:rgba(240,165,0,.12);color:var(--amber);border-color:rgba(240,165,0,.3)" onclick="bracketAusCodeLaden(${hlIdxForBtn})">&#8635; Bracket aus Code neu laden</button>`;
+  }
   return h || `<div style="color:var(--muted);font-size:12px">Keine Daten vorhanden.</div>`;
 }
 
