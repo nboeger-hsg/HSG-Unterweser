@@ -303,26 +303,24 @@ const ARNHEM_CUP = {
         {name:"Skørping Håndbold 2",pts:""},{name:"Enköpings HF",pts:""}]}
     ],
     rounds:[
-      {name:"Gruppenphase Sa. (04.04.)", matches:[
-        {teamHome:"HSG Unterweser CII",teamAway:"SV Stöckheim",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"},
-        {teamHome:"HSG Unterweser CII",teamAway:"Skørping Håndbold 2",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"},
-        {teamHome:"HSG Unterweser CII",teamAway:"Enköpings HF",scoreH:"",scoreA:"",info:"Gr.B · Platzierung"}]},
-      {name:"Vorrunde So. (05.04.)", matches:[
-        {teamHome:"#1A",teamAway:"#4B",scoreH:"",scoreA:"",info:"Veld 3 · 09:20"},
-        {teamHome:"#4A",teamAway:"#1B",scoreH:"",scoreA:"",info:"Veld 4 · 09:20"},
-        {teamHome:"#2A",teamAway:"#3B",scoreH:"",scoreA:"",info:"Veld 5 · 09:20"},
-        {teamHome:"#2B",teamAway:"#3A",scoreH:"",scoreA:"",info:"Veld 5 · 09:45"}]},
-      {name:"Halbfinale (05.04.)", matches:[
-        {teamHome:"Sieger 2.1",teamAway:"Sieger 2.4",scoreH:"",scoreA:"",info:"Veld 3 · 11:00"},
-        {teamHome:"Sieger 2.2",teamAway:"Sieger 2.3",scoreH:"",scoreA:"",info:"Veld 1 · 11:25"}]},
-      {name:"Finale (05.04.)", matches:[
-        {teamHome:"Sieger HF1",teamAway:"Sieger HF2",scoreH:"",scoreA:"",info:"Veld 1 · 12:40"}]},
-      {name:"Platz 3-4 (05.04.)", matches:[
-        {teamHome:"Verlierer HF1",teamAway:"Verlierer HF2",scoreH:"",scoreA:"",info:"Veld 2 · 12:40"}]},
-      {name:"Platz 5-6 (05.04.)", matches:[
-        {teamHome:"Sieger 3.3",teamAway:"Sieger 3.4",scoreH:"",scoreA:"",info:"Veld 3 · 12:40"}]},
-      {name:"Platz 7-8 (05.04.)", matches:[
-        {teamHome:"Verlierer 3.3",teamAway:"Verlierer 3.4",scoreH:"",scoreA:"",info:"Veld 5 · 13:05"}]}
+      {name:"Runde 1 · 09:20", matches:[
+        {teamHome:"Skørping Håndbold 1",teamAway:"HSG Unterweser CII",scoreH:16,scoreA:3,info:"Veld 3"},
+        {teamHome:"HSG Odenwald",teamAway:"Enköpings HF",scoreH:11,scoreA:17,info:"Veld 4"},
+        {teamHome:"HSG Unterweser C I",teamAway:"Skørping Håndbold 2",scoreH:17,scoreA:4,info:"Veld 5"},
+        {teamHome:"SV Stöckheim",teamAway:"MTV Geismar",scoreH:10,scoreA:8,info:"Veld 5 · 09:45"}]},
+      {name:"Runde 2 · 11:00 (Sieger vs Sieger / Verlierer vs Verlierer)", matches:[
+        {teamHome:"Skørping Håndbold 1",teamAway:"SV Stöckheim",scoreH:17,scoreA:8,info:"Veld 3 · Pl.1-4"},
+        {teamHome:"Enköpings HF",teamAway:"HSG Unterweser C I",scoreH:7,scoreA:15,info:"Veld 1 · 11:25 · Pl.1-4"},
+        {teamHome:"HSG Unterweser CII",teamAway:"MTV Geismar",scoreH:5,scoreA:24,info:"Veld 2 · Pl.5-8"},
+        {teamHome:"HSG Odenwald",teamAway:"Skørping Håndbold 2",scoreH:10,scoreA:14,info:"Veld 1 · Pl.5-8"}]},
+      {name:"Finale Platz 1-2 · 12:40", matches:[
+        {teamHome:"Skørping Håndbold 1",teamAway:"HSG Unterweser C I",scoreH:"",scoreA:"",info:"Veld 1"}]},
+      {name:"Platz 3-4 · 12:40", matches:[
+        {teamHome:"SV Stöckheim",teamAway:"Enköpings HF",scoreH:"",scoreA:"",info:"Veld 2"}]},
+      {name:"Platz 5-6 · 12:40", matches:[
+        {teamHome:"Skørping Håndbold 2",teamAway:"MTV Geismar",scoreH:"",scoreA:"",info:"Veld 3"}]},
+      {name:"Platz 7-8 · 13:05", matches:[
+        {teamHome:"HSG Unterweser CII",teamAway:"HSG Odenwald",scoreH:"",scoreA:"",info:"Veld 5"}]}
     ]
   }
 };
@@ -824,8 +822,19 @@ function dedupGames(games) {
   return Array.from(seen.values()).map(i => games[i]);
 }
 
+function isKOSpiel(g, hl) {
+  // Prüft ob ein Spiel im Bracket (KO-Phase) erfasst ist — dann nicht doppelt in Spiele anzeigen
+  const rounds = (hl.bracket && hl.bracket.rounds) || [];
+  return rounds.some(r => (r.matches||[]).some(m =>
+    m.scoreH !== "" && m.scoreH !== undefined &&
+    ((m.teamHome === g.teamHome && m.teamAway === g.teamAway) ||
+     (m.teamHome === g.teamAway && m.teamAway === g.teamHome))
+  ));
+}
+
 function renderHLSpiele(hl, idx) {
-  const gs = dedupGames(hl.games||[]);
+  // Nur Spiele anzeigen die NICHT bereits im Bracket erfasst sind
+  const gs = dedupGames((hl.games||[]).filter(g => !isKOSpiel(g, hl)));
   let h = "";
   if(!gs.length) {
     h += `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Spiele eingetragen.</div>`;
@@ -914,7 +923,8 @@ function bereinigeDuplikate(hlIdx) {
 }
 
 function renderHLTorjaeger(hl) {
-  const scorers = parseScorers(dedupGames(hl.games||[]));
+  const groupGames = dedupGames((hl.games||[]).filter(g => !isKOSpiel(g, hl)));
+  const scorers = parseScorers(groupGames);
   if(!scorers.length) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Torschützen.</div>`;
   const maxT = scorers[0].tore;
   const medals = ["&#129351;","&#129352;","&#129353;"];
@@ -930,13 +940,21 @@ function renderHLTorjaeger(hl) {
   </div>`).join("");
 }
 
+function isGroupGame(g, group) {
+  // Nur Spiele die zu dieser Gruppe gehören (beide Teams in der Gruppe)
+  const names = (group.teams||[]).map(t => t.name.trim().toLowerCase());
+  const h = (g.teamHome||"").trim().toLowerCase();
+  const a = (g.teamAway||"").trim().toLowerCase();
+  return names.includes(h) && names.includes(a);
+}
+
 function calcGroupTable(group, allGames) {
-  // Berechnet Punkte automatisch aus den Spielen
+  // Berechnet Punkte automatisch — NUR aus Gruppenspielen (Samstag)
   const stats = {};
   (group.teams||[]).forEach(t => {
     stats[t.name] = { name:t.name, pts:0, wins:0, draws:0, losses:0, gf:0, ga:0, played:0 };
   });
-  dedupGames(allGames).filter(g => isPlayed(g)).forEach(g => {
+  dedupGames(allGames).filter(g => isPlayed(g) && isGroupGame(g, group)).forEach(g => {
     const h = g.teamHome, a = g.teamAway;
     if(!stats[h] && !stats[a]) return; // Nicht in dieser Gruppe
     if(stats[h]) { stats[h].gf+=g.scoreH; stats[h].ga+=g.scoreA; stats[h].played++; }
