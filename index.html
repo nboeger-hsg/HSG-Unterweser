@@ -924,6 +924,9 @@ function bereinigeDuplikate(hlIdx) {
   });
 }
 
+// Globaler Speicher für Torschützen-Masken-Daten (vermeidet JSON-Escaping-Probleme)
+window._tsData = {};
+
 function renderHLTorjaeger(hl, idx) {
   const scorers = parseScorers(dedupGames(hl.games||[]));
   const maxT = scorers[0]?.tore || 1;
@@ -945,71 +948,106 @@ function renderHLTorjaeger(hl, idx) {
     h += `<div style="color:var(--muted);font-size:12px;padding:8px 0">Noch keine Torschützen erfasst.</div>`;
   }
 
-  // Admin: Erfassungsmaske für Torschützen aller Spiele
   if(STATE.isAdmin && idx !== undefined) {
-    // Alle Spiele sammeln: hl.games + Bracket-Spiele
+    // Alle gespielten Spiele sammeln: erst Bracket-Runden, dann hl.games
     const allMatches = [];
-    dedupGames(hl.games||[]).filter(isPlayed).forEach(g => {
-      allMatches.push({label: (g.round||"Spiel") + ": " + g.teamHome + " " + (g.scoreH||"–") + ":" + (g.scoreA||"–") + " " + g.teamAway, game: g, src: "games"});
-    });
+
+    // 1. Bracket-Spiele (Quelle der Wahrheit für Ergebnisse)
     ((hl.bracket&&hl.bracket.rounds)||[]).forEach(r => {
-      (r.matches||[]).filter(m => m.scoreH !== "" && m.scoreH !== undefined).forEach(m => {
-        const alreadyIn = (hl.games||[]).some(g =>
-          (g.teamHome===m.teamHome&&g.teamAway===m.teamAway)||(g.teamHome===m.teamAway&&g.teamAway===m.teamHome));
-        if(!alreadyIn) allMatches.push({label: r.name + ": " + m.teamHome + " " + m.scoreH + ":" + m.scoreA + " " + m.teamAway, match: m, src: "bracket"});
+      (r.matches||[]).filter(m => m.scoreH !== "" && m.scoreH !== undefined && m.scoreH !== null).forEach(m => {
+        // Vorhandene Note aus hl.games holen
+        const existing = (hl.games||[]).find(g =>
+          (g.teamHome===m.teamHome&&g.teamAway===m.teamAway)||
+          (g.teamHome===m.teamAway&&g.teamAway===m.teamHome));
+        allMatches.push({
+          label: r.name + ": " + m.teamHome + " " + m.scoreH + ":" + m.scoreA + " " + m.teamAway,
+          teamHome: m.teamHome, teamAway: m.teamAway,
+          scoreH: m.scoreH, scoreA: m.scoreA,
+          round: r.name,
+          note: existing ? (existing.note||"") : "",
+          src: "bracket"
+        });
       });
     });
+
+    // 2. hl.games die NICHT im Bracket sind (reine Gruppenspiele Sa.)
+    dedupGames(hl.games||[]).filter(isPlayed).forEach(g => {
+      const inBracket = allMatches.some(m =>
+        (m.teamHome===g.teamHome&&m.teamAway===g.teamAway)||
+        (m.teamHome===g.teamAway&&m.teamAway===g.teamHome));
+      if(!inBracket) allMatches.push({
+        label: (g.round||"Spiel") + ": " + g.teamHome + " " + g.scoreH + ":" + g.scoreA + " " + g.teamAway,
+        teamHome: g.teamHome, teamAway: g.teamAway,
+        scoreH: g.scoreH, scoreA: g.scoreA,
+        round: g.round||"Gruppenspiel",
+        note: g.note||"",
+        src: "games"
+      });
+    });
+
+    // Daten global speichern — kein JSON im onclick nötig
+    window._tsData[idx] = allMatches;
 
     if(allMatches.length) {
       h += `<div style="margin-top:12px;padding:10px;background:rgba(30,111,224,.06);border:1px solid var(--b2);border-radius:8px">
         <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);margin-bottom:8px">&#9998; Torschützen erfassen</div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Format: Leon 5 Tore; Max 3 Tore (7M 1/2)</div>`;
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Format: Leon 5 Tore; Max 3 Tore (7M 1/2) · Nur HSG CII Tore eintragen</div>`;
       allMatches.forEach((item, ai) => {
-        const existing = item.game ? (item.game.note||"") : "";
-        h += `<div style="margin-bottom:8px">
-          <div style="font-size:11px;color:var(--text);margin-bottom:3px;font-weight:600">${item.label}</div>
-          <input id="ts_${idx}_${ai}" value="${existing.replace(/"/g,'&quot;')}"
-            placeholder="Leon 5 Tore; Max 3 Tore"
+        const isOurs = item.teamHome.includes("Unterweser") || item.teamAway.includes("Unterweser");
+        h += `<div style="margin-bottom:8px;opacity:${isOurs?1:0.6}">
+          <div style="font-size:11px;color:${isOurs?'var(--white)':'var(--muted)'};margin-bottom:3px;font-weight:${isOurs?700:400}">${item.label}</div>
+          <input id="ts_${idx}_${ai}"
+            value="${(item.note||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}"
+            placeholder="${isOurs?'Leon 5 Tore; Max 3 Tore':'(kein HSG CII Spiel)'}"
+            ${isOurs?'':'style="opacity:0.5"'}
             style="font-size:12px;padding:6px 8px"/>
         </div>`;
       });
-      h += `<input type="hidden" id="ts_hlIdx_${idx}" value="${idx}"/>
-        <button class="btn btn-p btn-sm" style="margin-top:4px" onclick="saveTorschuetzen(${idx}, ${JSON.stringify(allMatches.map(m=>({src:m.src, teamHome:(m.game||m.match).teamHome, teamAway:(m.game||m.match).teamAway}))).replace(/"/g,'&quot;')})">&#9989; Torschützen speichern</button>
+      h += `<button class="btn btn-p btn-sm" style="margin-top:4px" onclick="saveTorschuetzen(${idx})">&#9989; Torschützen speichern</button>
       </div>`;
+    } else {
+      h += `<div style="margin-top:8px;font-size:11px;color:var(--muted)">Keine gespielten Spiele gefunden.</div>`;
     }
   }
   return h;
 }
 
-function saveTorschuetzen(hlIdx, matchInfos) {
+function saveTorschuetzen(hlIdx) {
   const hl = STATE.highlights[hlIdx];
   if(!hl.games) hl.games = [];
-  matchInfos.forEach((info, ai) => {
+  const allMatches = window._tsData[hlIdx] || [];
+
+  allMatches.forEach((item, ai) => {
     const val = document.getElementById("ts_" + hlIdx + "_" + ai)?.value.trim() || "";
-    if(info.src === "games") {
-      const g = hl.games.find(g => g.teamHome===info.teamHome && g.teamAway===info.teamAway);
-      if(g) g.note = val;
+    if(!val) return; // Leere Felder überspringen
+
+    // Vorhandenes Spiel suchen (beide Richtungen)
+    const existIdx = hl.games.findIndex(g =>
+      (g.teamHome===item.teamHome&&g.teamAway===item.teamAway)||
+      (g.teamHome===item.teamAway&&g.teamAway===item.teamHome));
+
+    if(existIdx !== -1) {
+      hl.games[existIdx].note = val;
     } else {
-      // Bracket-Spiel → als neuen games-Eintrag speichern falls noch nicht vorhanden
-      const exists = hl.games.find(g =>
-        (g.teamHome===info.teamHome&&g.teamAway===info.teamAway)||
-        (g.teamHome===info.teamAway&&g.teamAway===info.teamHome));
-      if(exists) { exists.note = val; }
-      else {
-        hl.games.push({
-          id: Date.now().toString()+Math.random().toString(36).slice(2,5),
-          teamHome: info.teamHome, teamAway: info.teamAway,
-          isHome: info.teamHome.includes("Unterweser"),
-          round: "Platzierungsspiel", note: val,
-          venue: "Sportcentrum Valkenhuizen", date:"", time:"", pdf:""
-        });
-      }
+      // Neu anlegen mit allen Daten aus Bracket
+      hl.games.push({
+        id: Date.now().toString() + Math.random().toString(36).slice(2,5),
+        teamHome: item.teamHome, teamAway: item.teamAway,
+        isHome: item.teamHome.includes("Unterweser"),
+        round: item.round,
+        scoreH: item.scoreH, scoreA: item.scoreA,
+        note: val,
+        venue: "Sportcentrum Valkenhuizen",
+        date: "2026-04-05", time: "", pdf: ""
+      });
     }
   });
-  saveAll().then(() => {
-    toast("&#9989; Torschützen gespeichert");
-    hlTab(hlIdx, "torjaeger");
-  });
+
+  // Sofort STATE updaten und rendern, dann speichern
+  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  hlTab(hlIdx, "torjaeger"); // Sofort aktualisieren
+  toast("&#9989; Torschützen gespeichert — wird synchronisiert...");
+  saveAll().then(ok => toast(ok ? "&#9989; Gespeichert" : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen"));
 }
 
 function renderHLPlatzierung(hl, idx) {
