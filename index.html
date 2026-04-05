@@ -923,8 +923,9 @@ function bereinigeDuplikate(hlIdx) {
 }
 
 function renderHLTorjaeger(hl) {
-  const groupGames = dedupGames((hl.games||[]).filter(g => !isKOSpiel(g, hl)));
-  const scorers = parseScorers(groupGames);
+  // Alle manuell erfassten Spiele für Torjäger nehmen (Torschützen werden nur bei hl.games eingetragen)
+  // dedupGames verhindert Doppelzählung, kein isKOSpiel-Filter da KO-Spiele keine Torschützen haben
+  const scorers = parseScorers(dedupGames(hl.games||[]));
   if(!scorers.length) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Torschützen.</div>`;
   const maxT = scorers[0].tore;
   const medals = ["&#129351;","&#129352;","&#129353;"];
