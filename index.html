@@ -941,11 +941,24 @@ function renderHLTorjaeger(hl) {
 }
 
 function isGroupGame(g, group) {
-  // Nur Spiele die zu dieser Gruppe gehören (beide Teams in der Gruppe)
+  // Spiel gehört zur Gruppe wenn:
+  // 1. Das round-Feld den Gruppennamen enthält (z.B. "Gruppe B"), ODER
+  // 2. Beide Teams in der Gruppe sind UND es kein KO-Spiel ist
+  const gname = (group.name||"").trim().toLowerCase();
+  const round = (g.round||"").trim().toLowerCase();
   const names = (group.teams||[]).map(t => t.name.trim().toLowerCase());
   const h = (g.teamHome||"").trim().toLowerCase();
   const a = (g.teamAway||"").trim().toLowerCase();
-  return names.includes(h) && names.includes(a);
+
+  // Wenn round-Feld Gruppenname enthält → eindeutig Gruppenspiel dieser Gruppe
+  if(round && round.includes(gname)) return true;
+
+  // Sonst: beide Teams müssen in dieser Gruppe sein UND round darf kein Platzierungshinweis sein
+  const isKO = round.includes("platz") || round.includes("finale") ||
+               round.includes("halbfinale") || round.includes("vorrunde") ||
+               round.includes("runde 1") || round.includes("runde 2") ||
+               round.includes("runde 3") || round.includes("runde 4");
+  return !isKO && names.includes(h) && names.includes(a);
 }
 
 function calcGroupTable(group, allGames) {
@@ -1026,7 +1039,7 @@ function renderHLBracket(hl) {
   // KO-RUNDEN
   const rounds = hl.bracket.rounds||[];
   if(rounds.length) {
-    h += `<div class="ko-phase"><div class="ko-title">&#127942; K.O.-Phase</div>`;
+    h += `<div class="ko-phase"><div class="ko-title">&#127942; Vorrunden- und Platzierungsspiele</div>`;
     rounds.forEach(round => {
       (round.matches||[]).forEach(m => {
         const w1 = m.scoreH!==undefined && m.scoreH!=='' && parseInt(m.scoreH)>parseInt(m.scoreA);
@@ -1089,7 +1102,7 @@ function openBracketEditor(hlIdx) {
   document.getElementById("hlModalContent").innerHTML = `
     <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--blue2);margin-bottom:8px">&#127942; Gruppenphase</div>
     ${gHtml}
-    <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;margin-top:4px">&#9876; K.O.-Phase</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;margin-top:4px">&#9876; Vorrunden- und Platzierungsspiele</div>
     ${rHtml}
     <input type="hidden" id="bracketHlIdx" value="${hlIdx}"/>
     <input type="hidden" id="bracketGroups" value="${JSON.stringify(groups).replace(/"/g,'&quot;')}"/>
