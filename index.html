@@ -758,9 +758,10 @@ function renderHighlights() {
             ${hl.website?`<div style="margin-top:6px"><a href="${hl.website}" target="_blank" style="color:var(--blue2);font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">&#127758; ${hl.website.replace(/^https?:\/\//,'').replace(/\/$/,'')}</a></div>`:''}
           </div>`:''}
           <div class="hl-tabs">
-            <div class="hl-tab on" id="hlt-${idx}-spiele"   onclick="hlTab(${idx},'spiele')">&#128197; Spiele</div>
-            <div class="hl-tab"    id="hlt-${idx}-torjaeger" onclick="hlTab(${idx},'torjaeger')">&#9917; Torjäger</div>
+            <div class="hl-tab on" id="hlt-${idx}-spiele"    onclick="hlTab(${idx},'spiele')">&#128197; Spiele</div>
+            <div class="hl-tab"    id="hlt-${idx}-torjaeger"  onclick="hlTab(${idx},'torjaeger')">&#9917; Torjäger</div>
             ${hl.typ==='turnier'?`<div class="hl-tab" id="hlt-${idx}-bracket" onclick="hlTab(${idx},'bracket')">&#127942; Turnierbaum</div>`:''}
+            ${hl.typ==='turnier'?`<div class="hl-tab" id="hlt-${idx}-platzierung" onclick="hlTab(${idx},'platzierung')">&#127942; Abschlusstabelle</div>`:''}
             <div class="hl-tab" id="hlt-${idx}-fotos" onclick="hlTab(${idx},'fotos')">&#128247; Fotos${(hl.fotos||[]).length?` (${hl.fotos.length})`:''}</div>
           </div>
           <div id="hl-content-${idx}">
@@ -798,10 +799,11 @@ function hlTab(idx, tab) {
   document.getElementById(`hlt-${idx}-${tab}`)?.classList.add("on");
   const hl = STATE.highlights[idx];
   let c = "";
-  if(tab==="spiele")    c = renderHLSpiele(hl, idx);
-  if(tab==="torjaeger") c = renderHLTorjaeger(hl);
-  if(tab==="bracket")   c = renderHLBracket(hl);
-  if(tab==="fotos")     c = renderHLFotos(hl, idx);
+  if(tab==="spiele")      c = renderHLSpiele(hl, idx);
+  if(tab==="torjaeger")   c = renderHLTorjaeger(hl, idx);
+  if(tab==="bracket")     c = renderHLBracket(hl);
+  if(tab==="platzierung") c = renderHLPlatzierung(hl, idx);
+  if(tab==="fotos")       c = renderHLFotos(hl, idx);
   document.getElementById("hl-content-"+idx).innerHTML = c;
 }
 
@@ -922,23 +924,153 @@ function bereinigeDuplikate(hlIdx) {
   });
 }
 
-function renderHLTorjaeger(hl) {
-  // Alle manuell erfassten Spiele für Torjäger nehmen (Torschützen werden nur bei hl.games eingetragen)
-  // dedupGames verhindert Doppelzählung, kein isKOSpiel-Filter da KO-Spiele keine Torschützen haben
+function renderHLTorjaeger(hl, idx) {
   const scorers = parseScorers(dedupGames(hl.games||[]));
-  if(!scorers.length) return `<div style="color:var(--muted);font-size:12px;padding:10px 0">Noch keine Torschützen.</div>`;
-  const maxT = scorers[0].tore;
+  const maxT = scorers[0]?.tore || 1;
   const medals = ["&#129351;","&#129352;","&#129353;"];
-  return scorers.map((s,i) => `<div class="scorer-row">
-    <div class="scorer-rank" style="color:${i<3?['#ffd700','#c0c0c0','#cd7f32'][i]:'var(--muted)'}">${i<3?medals[i]:i+1}</div>
-    <div style="flex:1">
-      <div style="display:flex;justify-content:space-between">
-        <span style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white)">${s.name}</span>
-        <span style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--amber)">${s.tore}</span>
+
+  let h = "";
+  if(scorers.length) {
+    h += scorers.map((s,i) => `<div class="scorer-row">
+      <div class="scorer-rank" style="color:${i<3?['#ffd700','#c0c0c0','#cd7f32'][i]:'var(--muted)'}">${i<3?medals[i]:i+1}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white)">${s.name}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--amber)">${s.tore} Tore</span>
+        </div>
+        <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${Math.round(s.tore/maxT*100)}%"></div></div>
       </div>
-      <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${Math.round(s.tore/maxT*100)}%"></div></div>
-    </div>
-  </div>`).join("");
+    </div>`).join("");
+  } else {
+    h += `<div style="color:var(--muted);font-size:12px;padding:8px 0">Noch keine Torschützen erfasst.</div>`;
+  }
+
+  // Admin: Erfassungsmaske für Torschützen aller Spiele
+  if(STATE.isAdmin && idx !== undefined) {
+    // Alle Spiele sammeln: hl.games + Bracket-Spiele
+    const allMatches = [];
+    dedupGames(hl.games||[]).filter(isPlayed).forEach(g => {
+      allMatches.push({label: (g.round||"Spiel") + ": " + g.teamHome + " " + (g.scoreH||"–") + ":" + (g.scoreA||"–") + " " + g.teamAway, game: g, src: "games"});
+    });
+    ((hl.bracket&&hl.bracket.rounds)||[]).forEach(r => {
+      (r.matches||[]).filter(m => m.scoreH !== "" && m.scoreH !== undefined).forEach(m => {
+        const alreadyIn = (hl.games||[]).some(g =>
+          (g.teamHome===m.teamHome&&g.teamAway===m.teamAway)||(g.teamHome===m.teamAway&&g.teamAway===m.teamHome));
+        if(!alreadyIn) allMatches.push({label: r.name + ": " + m.teamHome + " " + m.scoreH + ":" + m.scoreA + " " + m.teamAway, match: m, src: "bracket"});
+      });
+    });
+
+    if(allMatches.length) {
+      h += `<div style="margin-top:12px;padding:10px;background:rgba(30,111,224,.06);border:1px solid var(--b2);border-radius:8px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);margin-bottom:8px">&#9998; Torschützen erfassen</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Format: Leon 5 Tore; Max 3 Tore (7M 1/2)</div>`;
+      allMatches.forEach((item, ai) => {
+        const existing = item.game ? (item.game.note||"") : "";
+        h += `<div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text);margin-bottom:3px;font-weight:600">${item.label}</div>
+          <input id="ts_${idx}_${ai}" value="${existing.replace(/"/g,'&quot;')}"
+            placeholder="Leon 5 Tore; Max 3 Tore"
+            style="font-size:12px;padding:6px 8px"/>
+        </div>`;
+      });
+      h += `<input type="hidden" id="ts_hlIdx_${idx}" value="${idx}"/>
+        <button class="btn btn-p btn-sm" style="margin-top:4px" onclick="saveTorschuetzen(${idx}, ${JSON.stringify(allMatches.map(m=>({src:m.src, teamHome:(m.game||m.match).teamHome, teamAway:(m.game||m.match).teamAway}))).replace(/"/g,'&quot;')})">&#9989; Torschützen speichern</button>
+      </div>`;
+    }
+  }
+  return h;
+}
+
+function saveTorschuetzen(hlIdx, matchInfos) {
+  const hl = STATE.highlights[hlIdx];
+  if(!hl.games) hl.games = [];
+  matchInfos.forEach((info, ai) => {
+    const val = document.getElementById("ts_" + hlIdx + "_" + ai)?.value.trim() || "";
+    if(info.src === "games") {
+      const g = hl.games.find(g => g.teamHome===info.teamHome && g.teamAway===info.teamAway);
+      if(g) g.note = val;
+    } else {
+      // Bracket-Spiel → als neuen games-Eintrag speichern falls noch nicht vorhanden
+      const exists = hl.games.find(g =>
+        (g.teamHome===info.teamHome&&g.teamAway===info.teamAway)||
+        (g.teamHome===info.teamAway&&g.teamAway===info.teamHome));
+      if(exists) { exists.note = val; }
+      else {
+        hl.games.push({
+          id: Date.now().toString()+Math.random().toString(36).slice(2,5),
+          teamHome: info.teamHome, teamAway: info.teamAway,
+          isHome: info.teamHome.includes("Unterweser"),
+          round: "Platzierungsspiel", note: val,
+          venue: "Sportcentrum Valkenhuizen", date:"", time:"", pdf:""
+        });
+      }
+    }
+  });
+  saveAll().then(() => {
+    toast("&#9989; Torschützen gespeichert");
+    hlTab(hlIdx, "torjaeger");
+  });
+}
+
+function renderHLPlatzierung(hl, idx) {
+  const platz = hl.platzierung || [];
+  let h = `<div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:8px">ABSCHLUSSTABELLE</div>`;
+
+  if(platz.length) {
+    platz.forEach((p, i) => {
+      const medals = {1:"&#129351;",2:"&#129352;",3:"&#129353;"};
+      const isOurs = (p.team||"").includes("Unterweser");
+      h += `<div style="display:flex;align-items:center;gap:12px;padding:8px 10px;
+        background:${isOurs?'rgba(90,174,255,.08)':'var(--bg3)'};
+        border:1px solid ${isOurs?'var(--b2)':'var(--b1)'};
+        border-radius:8px;margin-bottom:6px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;width:32px;text-align:center;color:${i<3?['#ffd700','#c0c0c0','#cd7f32'][i]:'var(--muted)'}">
+          ${medals[i+1]||i+1}
+        </div>
+        <div style="flex:1">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:${isOurs?'var(--blue2)':'var(--white)'}">
+            ${p.team||""}
+          </div>
+          ${p.info?`<div style="font-size:10px;color:var(--muted)">${p.info}</div>`:""}
+        </div>
+      </div>`;
+    });
+  } else {
+    h += `<div style="color:var(--muted);font-size:12px;padding:8px 0">Noch keine Abschlusstabelle erfasst.</div>`;
+  }
+
+  if(STATE.isAdmin && idx !== undefined) {
+    h += `<div style="margin-top:10px;padding:10px;background:rgba(30,111,224,.06);border:1px solid var(--b2);border-radius:8px">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);margin-bottom:8px">&#9998; Abschlusstabelle erfassen</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Platz 1 oben, Platz 8 unten · optional Zusatzinfo</div>`;
+    for(let i=0; i<8; i++) {
+      const p = platz[i] || {};
+      h += `<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+        <span style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--muted);width:20px">${i+1}.</span>
+        <input id="platz_team_${idx}_${i}" value="${(p.team||'').replace(/"/g,'&quot;')}"
+          placeholder="Teamname" style="flex:2;font-size:12px;padding:5px 8px"/>
+        <input id="platz_info_${idx}_${i}" value="${(p.info||'').replace(/"/g,'&quot;')}"
+          placeholder="z.B. Gruppe A" style="flex:1;font-size:11px;padding:5px 8px"/>
+      </div>`;
+    }
+    h += `<button class="btn btn-p btn-sm" style="margin-top:6px" onclick="savePlatzierung(${idx})">&#9989; Speichern</button></div>`;
+  }
+  return h;
+}
+
+function savePlatzierung(hlIdx) {
+  const hl = STATE.highlights[hlIdx];
+  const result = [];
+  for(let i=0; i<8; i++) {
+    const team = document.getElementById("platz_team_" + hlIdx + "_" + i)?.value.trim()||"";
+    const info = document.getElementById("platz_info_" + hlIdx + "_" + i)?.value.trim()||"";
+    if(team) result.push({team, info});
+  }
+  hl.platzierung = result;
+  saveAll().then(() => {
+    toast("&#9989; Abschlusstabelle gespeichert");
+    hlTab(hlIdx, "platzierung");
+  });
 }
 
 function isGroupGame(g, group) {
