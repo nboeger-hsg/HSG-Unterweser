@@ -174,7 +174,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 /* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:16px;padding:20px;width:100%;max-width:380px}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:16px;padding:20px;width:100%;max-width:520px}
 
 /* ARCHIV */
 .archiv-season{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
@@ -1088,13 +1088,20 @@ function openBracketEditor(hlIdx) {
     <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
       <div style="font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">${r.name}</div>
       ${r.matches.map((m,mi) => `
-        <div style="margin-bottom:6px">
-          <div style="display:flex;gap:6px;align-items:center">
-            <input style="flex:1" placeholder="Heim" id="km_${ri}_${mi}_h" value="${m.teamHome||''}"/>
-            <input style="width:42px;text-align:center" type="number" placeholder="-" id="km_${ri}_${mi}_sh" value="${m.scoreH!==undefined&&m.scoreH!==''?m.scoreH:''}"/>
-            <span style="color:var(--muted);font-size:11px">:</span>
-            <input style="width:42px;text-align:center" type="number" placeholder="-" id="km_${ri}_${mi}_sa" value="${m.scoreA!==undefined&&m.scoreA!==''?m.scoreA:''}"/>
-            <input style="flex:1" placeholder="Gast" id="km_${ri}_${mi}_a" value="${m.teamAway||''}"/>
+        <div style="margin-bottom:10px;padding:8px;background:rgba(0,0,0,.2);border-radius:6px">
+          <div style="margin-bottom:6px">
+            <input style="width:100%;margin-bottom:4px" placeholder="Heim-Team" id="km_${ri}_${mi}_h" value="${m.teamHome||''}"/>
+            <input style="width:100%" placeholder="Gast-Team" id="km_${ri}_${mi}_a" value="${m.teamAway||''}"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input style="width:70px;text-align:center;font-size:18px;font-weight:700;padding:6px"
+              type="number" min="0" placeholder="–" id="km_${ri}_${mi}_sh"
+              value="${m.scoreH!==undefined&&m.scoreH!==''?m.scoreH:''}"/>
+            <span style="color:var(--muted);font-size:16px;font-weight:700">:</span>
+            <input style="width:70px;text-align:center;font-size:18px;font-weight:700;padding:6px"
+              type="number" min="0" placeholder="–" id="km_${ri}_${mi}_sa"
+              value="${m.scoreA!==undefined&&m.scoreA!==''?m.scoreA:''}"/>
+            ${m.info?`<span style="font-size:10px;color:var(--muted);flex:1">${m.info}</span>`:''}
           </div>
         </div>`).join('')}
     </div>`).join('');
@@ -1135,7 +1142,7 @@ function saveBracket() {
     })).filter(t => t.name)
   }));
 
-  // KO-Runden auslesen
+  // Vorrunden- und Platzierungsspielen auslesen
   const rounds = rawRounds.map((r,ri) => ({
     name: r.name,
     matches: r.matches.map((m,mi) => ({
