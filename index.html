@@ -426,9 +426,26 @@ async function syncAll() {
 
   if (data && data.seasons && data.seasons["2025-26"] &&
       data.seasons["2025-26"].games && data.seasons["2025-26"].games.length > 0) {
-    // ✅ Sheet hat vollständige Daten → direkt übernehmen, NICHTS zurückschreiben
+    // ✅ Sheet hat Saison-Daten → übernehmen
     STATE.seasons    = data.seasons;
     STATE.highlights = data.highlights || [];
+
+    // Arnhem Cup Bracket aktualisieren wenn Runden-Anzahl nicht stimmt
+    const arnIdx = STATE.highlights.findIndex(h => h.name && h.name.includes("Arnhem"));
+    if (arnIdx !== -1) {
+      const arn = STATE.highlights[arnIdx];
+      const sheetRounds = (arn.bracket && arn.bracket.rounds) || [];
+      const codeRounds  = ARNHEM_CUP.bracket.rounds;
+      // Bracket aus Code übernehmen wenn weniger Runden oder weniger Ergebnisse als im Code
+      const sheetScored = sheetRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
+      const codeScored  = codeRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
+      if (sheetRounds.length < codeRounds.length || sheetScored < codeScored) {
+        // Code hat mehr Daten → Runden aus Code übernehmen, aber Torschützen-Notes aus Sheet erhalten
+        arn.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
+        await saveAll();
+      }
+    }
+
     LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
     setBanner("&#9679; Google Sheets verbunden", true);
 
@@ -566,7 +583,7 @@ function fixName(n) { return NAME_FIX[n] || n; }
 
 function parseScorers(gameList) {
   const map = {};
-  gameList.filter(g=>isPlayed(g)&&g.note).forEach(g=>{
+  gameList.filter(g=>g.note&&g.note.trim()).forEach(g=>{
     g.note.split(";").forEach(part=>{
       part = part.trim();
       // Matcht: "Name Zahl Tor..."  UND  "Name Zahl (7M..."  UND  "Name Zahl" am Ende
