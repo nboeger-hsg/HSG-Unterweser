@@ -228,6 +228,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div class="tab" onclick="showTab('spielplan',this)"><span class="ti">&#128197;</span>Spielplan</div>
     <div class="tab" onclick="showTab('highlights',this)"><span class="ti">&#11088;</span>Highlights</div>
     <div class="tab" onclick="showTab('fotos',this)"><span class="ti">&#128247;</span>Fotos</div>
+    <div class="tab" onclick="showTab('songs',this)"><span class="ti">&#127925;</span>Songs</div>
     <div class="tab" onclick="showTab('enter',this)"><span class="ti">&#9999;</span>Admin</div>
     <div class="tab" onclick="showTab('impressum',this)"><span class="ti">&#8505;</span>Impressum</div>
   </nav>
@@ -239,6 +240,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
   <div class="view pad"    id="view-spielplan"></div>
   <div class="view pad"    id="view-highlights"></div>
   <div class="view"        id="view-fotos"></div>
+  <div class="view pad"    id="view-songs"></div>
   <div class="view pad"    id="view-enter"></div>
   <div class="view pad"    id="view-impressum"></div>
 
@@ -288,6 +290,11 @@ const ADMIN_PIN = "1967";
 const GS_URL = "https://script.google.com/macros/s/AKfycbxQm3WkbxHkiPyNhTsiZSlhb6K8dGiScPGTsYIozRr2VHGagPPKfUgHzfRvcnPU69fyIA/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
+const SONG_BASE = FOTO_BASE; // gleiches GitHub-Pages-Repo
+const SONGS = [
+  // Neuer Song: MP3 ins Repo + eine Zeile hier + committen
+  // {title:"Einlaufhymne", file:"song_einlauf.mp3"},
+];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
 const ARNHEM_CUP = {
   name:"Arnhem Handball Cup 2026", typ:"turnier", ort:"Arnhem (Arnheim; NL)",
@@ -330,6 +337,20 @@ const NULIGA = {
   tabelle:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?championship=HRBN+25%2F26&group=432700&displayTyp=tabelle",
 };
 
+const NULIGA_2627 = {
+  meetings: "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?displayTyp=vorrunde&displayDetail=meetings&championship=HRBN+26%2F27&group=489833",
+  results:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/teamPortrait?teamtable=2227559&pageState=vorrunde&championship=HRBN+26%2F27&group=489833",
+  tabelle:  "https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?championship=HRBN+26%2F27&group=489833&displayTyp=tabelle",
+  ranglisten: [
+    {label:"&#9917; Tore pro Spieler",              url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=playerGoals&championship=HRBN+26%2F27&group=489833"},
+    {label:"&#127919; 7m-Tore pro Spieler",         url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=playerSevenMeterGoals&championship=HRBN+26%2F27&group=489833"},
+    {label:"&#9201; Zeitstrafen pro Spieler",       url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=playerSuspensions&championship=HRBN+26%2F27&group=489833"},
+    {label:"&#128993; Gelbe Karten pro Spieler",    url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=playerYellowCards&championship=HRBN+26%2F27&group=489833"},
+    {label:"&#128308; Rote Karten pro Spieler",     url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=playerRedCards&championship=HRBN+26%2F27&group=489833"},
+    {label:"&#128200; Staffel- und Mannschaftsstatistik", url:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupMeetingStatistics?displayType=groupAndTeams&championship=HRBN+26%2F27&group=489833"},
+  ],
+};
+
 // ═══════════════════════════════════════
 // SEED-DATEN SAISON 2025/26
 // ═══════════════════════════════════════
@@ -352,7 +373,28 @@ const SEED_2025 = [
   {id:"1771765631051",date:"2026-04-18",time:"13:15",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG TVL/LTS/Spaden",venue:"Großsporthalle, Rodenkirchen",pdf:"",note:""},
 ];
 
-// ═══════════════════════════════════════
+const SEED_2026 = [
+  {id:"2627-16204",date:"2026-09-05",time:"14:00",round:"1. Spieltag",isHome:false,teamHome:"TuSG Ritterhude",teamAway:"HSG Unterweser CII",venue:"Ritterhude, SZ",pdf:"",note:""},
+  {id:"2627-16211",date:"2026-09-19",time:"10:45",round:"2. Spieltag",isHome:false,teamHome:"Hagener SV II",teamAway:"HSG Unterweser CII",venue:"Hagen, SH Schulzentrum",pdf:"",note:""},
+  {id:"2627-16218",date:"2026-10-03",time:"15:45",round:"3. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Land Hadeln",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
+  {id:"2627-16223",date:"2026-10-31",time:"13:15",round:"4. Spieltag",isHome:false,teamHome:"SVGO Bremen",teamAway:"HSG Unterweser CII",venue:"Bremen-Grambke, SZ Alwin-Lonke-Str.",pdf:"",note:""},
+  {id:"2627-16228",date:"2026-11-08",time:"13:00",round:"5. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG Weser II",venue:"Nordenham-Blexen, SZ Nord",pdf:"",note:""},
+  {id:"2627-16231",date:"2026-11-14",time:"14:00",round:"6. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser CII",venue:"Hagen, SH Schulzentrum",pdf:"",note:""},
+  {id:"2627-16234",date:"2026-11-21",time:"14:00",round:"7. Spieltag",isHome:false,teamHome:"JSG Weser III",teamAway:"HSG Unterweser CII",venue:"Schiffdorf, SH Sonderschule",pdf:"",note:""},
+  {id:"2627-16240",date:"2026-11-28",time:"14:45",round:"8. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HG Bremerhaven",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
+  {id:"2627-16243",date:"2026-12-05",time:"14:30",round:"9. Spieltag",isHome:false,teamHome:"MSG LeMa HVH",teamAway:"HSG Unterweser CII",venue:"Bremen-Aumund, Oberschule Lerchenstrasse",pdf:"",note:""},
+  {id:"2627-16250",date:"2026-12-19",time:"11:15",round:"10. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"TuSG Ritterhude",venue:"Nordenham-Blexen, SZ Nord",pdf:"",note:""},
+  {id:"2627-16259",date:"2027-01-23",time:"14:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"Hagener SV II",venue:"Nordenham, SPZ Mitte",pdf:"",note:""},
+  {id:"2627-16262",date:"2027-02-07",time:"11:00",round:"12. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"Hagener SV",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
+  {id:"2627-16266",date:"2027-02-13",time:"10:30",round:"13. Spieltag",isHome:false,teamHome:"HSG Land Hadeln",teamAway:"HSG Unterweser CII",venue:"Cadenberge, SH Schulzentrum",pdf:"",note:""},
+  {id:"2627-16271",date:"2027-02-20",time:"14:30",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"SVGO Bremen",venue:"Nordenham-Blexen, SZ Nord",pdf:"",note:""},
+  {id:"2627-16274",date:"2027-03-06",time:"13:00",round:"15. Spieltag",isHome:false,teamHome:"JSG Weser II",teamAway:"HSG Unterweser CII",venue:"Langen, SH Schulzentrum",pdf:"",note:""},
+  {id:"2627-16280",date:"2027-03-13",time:"14:30",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG Weser III",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
+  {id:"2627-16285",date:"2027-04-11",time:"13:00",round:"17. Spieltag",isHome:false,teamHome:"HG Bremerhaven",teamAway:"HSG Unterweser CII",venue:"Bremerhaven, SZ C.v.O. Halle Bürgerpark",pdf:"",note:""},
+  {id:"2627-16289",date:"2027-04-17",time:"14:00",round:"18. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa HVH",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
+];
+
+// ════════════════════════════════════════
 // APP STATE
 // ═══════════════════════════════════════
 let STATE = {
@@ -365,7 +407,7 @@ let STATE = {
   // Daten (aus Google Sheets)
   seasons: {
     "2025-26": { name:"Saison 2025/26", rank:9, games: [], nuliga: NULIGA },
-    "2026-27": { name:"Saison 2026/27", rank:null, games: [], nuliga: null },
+    "2026-27": { name:"Saison 2026/27", rank:7, games: [], nuliga: NULIGA_2627 },
   },
   highlights: [],  // Array von Highlight-Objekten
 };
@@ -420,6 +462,22 @@ async function gsWrite(data) {
 // ═══════════════════════════════════════
 // SYNC
 // ═══════════════════════════════════════
+function normalizeSeasons() {
+  var seeded = false;
+  if (!STATE.seasons["2025-26"]) STATE.seasons["2025-26"] = { name:"Saison 2025/26", rank:9, games: [], nuliga: NULIGA };
+  if (!STATE.seasons["2026-27"]) STATE.seasons["2026-27"] = { name:"Saison 2026/27", rank:7, games: [], nuliga: NULIGA_2627 };
+  // 2026/27 einmalig mit Spielplan befuellen, falls leer
+  if (!STATE.seasons["2026-27"].games || STATE.seasons["2026-27"].games.length === 0) {
+    STATE.seasons["2026-27"].games = JSON.parse(JSON.stringify(SEED_2026));
+    if (STATE.seasons["2026-27"].rank == null) STATE.seasons["2026-27"].rank = 7;
+    seeded = true;
+  }
+  // nuLiga-Objekte immer aus Code-Konstanten setzen (verhindert veraltete/verworfene Links)
+  STATE.seasons["2025-26"].nuliga = NULIGA;
+  STATE.seasons["2026-27"].nuliga = NULIGA_2627;
+  return seeded;
+}
+
 async function syncAll() {
   setBanner("Verbinde mit Google Sheets...", false);
   const data = await gsReadJSONP();
@@ -485,6 +543,9 @@ async function syncAll() {
       setBanner("&#9651; Offline — Standarddaten", false);
     }
   }
+  const _seeded26 = normalizeSeasons();
+  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  if (_seeded26 && data && data.seasons) { await saveAll(); }
   renderActive();
 }
 
@@ -545,6 +606,7 @@ function renderActive() {
     case "spielplan":  renderSpielplan();  break;
     case "highlights": renderHighlights(); break;
     case "fotos":      renderFotos();      break;
+    case "songs":      renderSongs();      break;
     case "enter":      renderEnter();      break;
     case "impressum":  renderImpressum();  break;
   }
@@ -664,7 +726,7 @@ function renderOverview() {
   }
 
   h += `<div class="shdr">nuLiga Links</div>`;
-  const nl = STATE.seasons[STATE.activeSeason]?.nuliga || NULIGA;
+  const nl = STATE.seasons[STATE.activeSeason]?.nuliga;
   if(nl) {
     h += `<a class="nl-btn" href="${nl.meetings}" target="_blank">&#128197; Spielplan auf nuLiga</a>`;
     h += `<a class="nl-btn" href="${nl.results}"  target="_blank">&#9917; Ergebnisse auf nuLiga</a>`;
@@ -733,11 +795,17 @@ function renderSpielplan() {
   const gs = games();
   const upcoming = gs.filter(g=>!isPlayed(g));
   let h = `<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Tippe auf einen Link — nuLiga öffnet sich im Browser.</div>`;
-  const nl = STATE.seasons[STATE.activeSeason]?.nuliga || NULIGA;
+  const nl = STATE.seasons[STATE.activeSeason]?.nuliga;
   if(nl) {
     h += `<a class="nl-btn" href="${nl.meetings}" target="_blank" style="padding:16px;font-size:15px">&#128197; Spielplan (alle Spiele)</a>`;
     h += `<a class="nl-btn" href="${nl.results}"  target="_blank" style="padding:16px;font-size:15px">&#9917; Ergebnisse</a>`;
     h += `<a class="nl-btn" href="${nl.tabelle}"  target="_blank" style="padding:16px;font-size:15px">&#128202; Tabelle</a>`;
+    if (nl.ranglisten && nl.ranglisten.length) {
+      h += `<div class="shdr">Ranglisten &middot; nuLiga</div>`;
+      nl.ranglisten.forEach(r => {
+        h += `<a class="nl-btn" href="${r.url}" target="_blank">${r.label}</a>`;
+      });
+    }
   }
   if(upcoming.length) {
     h += `<div class="shdr">Kommende Spiele</div>`;
@@ -1806,6 +1874,31 @@ function saveGruppenEingabe() {
   });
 }
 
+function renderSongs() {
+  const el = document.getElementById("view-songs");
+  if (!SONGS.length) {
+    el.innerHTML = `
+      <div class="shdr" style="margin-top:0">&#127925; Teamsongs &middot; HSG Unterweser CII</div>
+      <div style="color:var(--muted);font-size:12px">Noch keine Songs hinterlegt.</div>`;
+    return;
+  }
+  const list = SONGS.map(s => `
+    <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--white);font-size:15px;margin-bottom:8px">
+        &#127925; ${s.title}
+      </div>
+      <audio controls preload="none" style="width:100%">
+        <source src="${SONG_BASE}${s.file}" type="audio/mpeg"/>
+        Dein Browser unterstützt keine Audiowiedergabe.
+      </audio>
+    </div>`).join("");
+  el.innerHTML = `
+    <div class="shdr" style="margin-top:0">&#127925; Teamsongs &middot; HSG Unterweser CII</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${SONGS.length} Song(s) &middot; Nur zur internen Nutzung</div>
+    ${list}
+    <div style="padding:16px;text-align:center;font-size:11px;color:var(--muted)">&#169; Interne Vereinsaufnahmen</div>`;
+}
+
 // ═══════════════════════════════════════
 // ADMIN / ENTER
 // ═══════════════════════════════════════
@@ -1946,7 +2039,7 @@ function addNewGame() {
     venue:"", pdf:"", note:""
   });
   STATE.editId = id;
-  showTab("enter", document.querySelectorAll(".tab")[6]);
+  showTab("enter", document.querySelectorAll(".tab")[7]);
 }
 
 function copyAppsScript() {
