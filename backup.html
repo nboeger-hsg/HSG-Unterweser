@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HSG Unterweser – Datensicherung</title>
+<style>
+  :root{--bg:#f4f5f3;--paper:#fff;--ink:#20262b;--muted:#5c666e;--line:#d8dcd7;
+        --accent:#3a5a63;--ok:#3d5a3d;--ok-soft:#e5ece2;--warn:#7a5230;--warn-soft:#f0e7dc;--code:#eef0ed;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:640px;margin:0 auto;padding:22px 16px 60px}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 18px;margin:0 0 16px}
+  .status{font-size:16px;font-weight:600;margin:0 0 10px}
+  .ok{color:var(--ok)} .bad{color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0 0}
+  td{padding:5px 0;border-bottom:1px solid var(--line)}
+  td.k{color:var(--muted)} td.v{text-align:right;font-weight:600}
+  button{appearance:none;border:none;border-radius:9px;font:inherit;font-weight:600;font-size:15px;
+         padding:14px 16px;width:100%;margin:8px 0 0;cursor:pointer}
+  .primary{background:var(--accent);color:#fff}
+  .secondary{background:var(--ok-soft);color:var(--ok);border:1px solid var(--line)}
+  .note{border-left:3px solid var(--accent);background:#e6ecec;padding:10px 12px;border-radius:0 8px 8px 0;font-size:13.5px;margin:0 0 14px}
+  .warn{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13.5px;margin:14px 0 0}
+  textarea{width:100%;min-height:120px;margin-top:10px;font-family:monospace;font-size:11px;
+           border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--code)}
+  ol{padding-left:20px} li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Datensicherung</h1>
+  <div class="sub">Sichert den gespeicherten Saison-Stand aus diesem Gerät.</div>
+
+  <div class="note">
+    Diese Seite muss auf einem <b>Android-Gerät</b> geöffnet werden, das die App zuvor
+    vollständig angezeigt hat – im <b>selben Browser</b> und unter der Adresse
+    <b>nboeger-hsg.github.io/HSG-Unterweser/backup.html</b>. Nur dann findet sie die Daten.
+  </div>
+
+  <div class="card">
+    <div id="status" class="status">Suche gespeicherte Daten …</div>
+    <div id="summary"></div>
+  </div>
+
+  <button id="dl" class="primary" style="display:none">Sicherung als Datei speichern</button>
+  <button id="cp" class="secondary" style="display:none">Text in Zwischenablage kopieren</button>
+
+  <div id="rawwrap" style="display:none">
+    <textarea id="raw" readonly></textarea>
+    <div class="sub" style="margin-top:6px">Dieser Text ist die vollständige Sicherung. Er kann bei Bedarf auch manuell weitergegeben werden.</div>
+  </div>
+
+  <div class="warn" id="notfound" style="display:none">
+    Auf diesem Gerät wurden keine gespeicherten App-Daten gefunden. Mögliche Gründe:
+    die Seite wurde nicht unter der richtigen Adresse geöffnet, ein anderer Browser wird
+    verwendet, oder dieses Gerät hatte keinen vollständigen Stand. Bitte ein anderes
+    Android-Gerät versuchen, das die App zuletzt vollständig angezeigt hat.
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY = "hsg_v5";
+  var statusEl = document.getElementById("status");
+  var sumEl = document.getElementById("summary");
+  var dlBtn = document.getElementById("dl");
+  var cpBtn = document.getElementById("cp");
+  var rawWrap = document.getElementById("rawwrap");
+  var rawEl = document.getElementById("raw");
+  var notFound = document.getElementById("notfound");
+
+  // Alle relevanten Schlüssel einsammeln (v5 bevorzugt, ältere als Reserve)
+  var found = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("hsg_") === 0) found[k] = localStorage.getItem(k);
+    }
+  } catch (e) {}
+
+  var payload = found[KEY] || null;
+
+  if (!payload) {
+    // Reserve: irgendein hsg_-Schlüssel mit seasons
+    for (var kk in found) {
+      try { if (JSON.parse(found[kk]).seasons) { payload = found[kk]; KEY = kk; break; } } catch(e){}
+    }
+  }
+
+  if (!payload) {
+    statusEl.textContent = "Keine Daten gefunden";
+    statusEl.className = "status bad";
+    notFound.style.display = "block";
+    return;
+  }
+
+  var obj = null;
+  try { obj = JSON.parse(payload); } catch(e) {}
+
+  statusEl.textContent = "Daten gefunden (" + KEY + ")";
+  statusEl.className = "status ok";
+
+  if (obj && obj.seasons) {
+    var rows = "";
+    var totalGames = 0;
+    for (var s in obj.seasons) {
+      var g = (obj.seasons[s].games || []).length;
+      totalGames += g;
+      rows += '<tr><td class="k">' + s + '</td><td class="v">' + g + ' Spiele</td></tr>';
+    }
+    var hl = (obj.highlights || []).length;
+    rows += '<tr><td class="k">Highlights</td><td class="v">' + hl + '</td></tr>';
+    rows += '<tr><td class="k">Spiele gesamt</td><td class="v">' + totalGames + '</td></tr>';
+    sumEl.innerHTML = '<table>' + rows + '</table>';
+  }
+
+  // Für Datei/Anzeige hübsch formatieren
+  var pretty = obj ? JSON.stringify(obj, null, 2) : payload;
+  rawEl.value = pretty;
+  rawWrap.style.display = "block";
+  dlBtn.style.display = "block";
+  cpBtn.style.display = "block";
+
+  function stamp(){
+    var d = new Date(), p = function(n){return (n<10?"0":"")+n;};
+    return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes());
+  }
+
+  dlBtn.addEventListener("click", function(){
+    var blob = new Blob([pretty], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "hsg_backup_" + stamp() + ".json";
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  cpBtn.addEventListener("click", function(){
+    rawEl.select(); rawEl.setSelectionRange(0, 999999);
+    try {
+      if (navigator.clipboard) navigator.clipboard.writeText(pretty);
+      else document.execCommand("copy");
+      cpBtn.textContent = "Kopiert";
+      setTimeout(function(){ cpBtn.textContent = "Text in Zwischenablage kopieren"; }, 2000);
+    } catch(e) {
+      cpBtn.textContent = "Bitte Text oben manuell markieren und kopieren";
+    }
+  });
+})();
+</script>
+</body>
+</html>
