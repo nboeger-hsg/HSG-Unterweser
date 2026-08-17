@@ -208,6 +208,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div class="hd-right">
       <div class="admin-dot" id="adminDot" style="display:none"></div>
       <button class="hd-btn" id="btnPin" onclick="openPin()">&#128273;</button>
+      <button class="hd-btn" id="btnReload" onclick="hardReload()" title="Neu laden">&#8635;</button>
     </div>
   </header>
 
@@ -287,7 +288,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 // KONSTANTEN
 // ═══════════════════════════════════════
 const ADMIN_PIN = "1967";
-const GS_URL = "https://script.google.com/macros/s/AKfycbxQm3WkbxHkiPyNhTsiZSlhb6K8dGiScPGTsYIozRr2VHGagPPKfUgHzfRvcnPU69fyIA/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbzXMYtSQugeXZVVk-0BGCLnG6U0p00foR1weGf3cHdHDt_lLfgqnxbyJrWiBydzyuWFYA/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
 const SONG_BASE = FOTO_BASE; // gleiches GitHub-Pages-Repo
@@ -355,22 +356,22 @@ const NULIGA_2627 = {
 // SEED-DATEN SAISON 2025/26
 // ═══════════════════════════════════════
 const SEED_2025 = [
-  {id:"1771763002065",date:"2025-09-06",time:"14:00",round:"1. Spieltag",isHome:false,teamHome:"HSG Schwanewede/NK. II",teamAway:"HSG Unterweser CII",scoreH:28,scoreA:28,venue:"Schwanewede, Heideschule",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057650&etag=cc0a448a-2ae3-44e3-9881-bede1d070471",note:"Leon 8 Tore; Alexander 5 Tore; Luca 5 Tore; Max 4 Tore; Ben 4 Tore (davon 7M 1/1); Tim 2 Tore"},
-  {id:"1771763171137",date:"2025-09-21",time:"13:00",round:"2. Spieltag",isHome:false,teamHome:"HSG Ligra",teamAway:"HSG Unterweser CII",scoreH:18,scoreA:14,venue:"Lilienthal-Falkenberg, Schoofmoor I",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057720&etag=f54f9737-ac98-4749-8e57-78b17ba0381a",note:"Roeckt 7 Tore; Tim 5 Tore; Jonas 1 Tor; Ben 1 Tor"},
+  {id:"1771763002065",date:"2025-09-06",time:"14:00",round:"1. Spieltag",isHome:false,teamHome:"HSG Schwanewede/NK. II",teamAway:"HSG Unterweser CII",scoreH:28,scoreA:28,venue:"Schwanewede, Heideschule",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057650&etag=cc0a448a-2ae3-44e3-9881-bede1d070471",note:"Leon 8 Tore; Rocket 5 Tore; Luca 5 Tore; Max 4 Tore; Ben 4 Tore (davon 7M 1/1); Tim 2 Tore"},
+  {id:"1771763171137",date:"2025-09-21",time:"13:00",round:"2. Spieltag",isHome:false,teamHome:"HSG Ligra",teamAway:"HSG Unterweser CII",scoreH:18,scoreA:14,venue:"Lilienthal-Falkenberg, Schoofmoor I",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057720&etag=f54f9737-ac98-4749-8e57-78b17ba0381a",note:"Rocket 7 Tore; Tim 5 Tore; Jonas 1 Tor; Ben 1 Tor"},
   {id:"1771763336260",date:"2025-11-08",time:"14:00",round:"3. Spieltag",isHome:false,teamHome:"MSG RiGrIOs",teamAway:"HSG Unterweser CII",scoreH:25,scoreA:11,venue:"Bremen-Grambke, SZ Alwin-Lonke-Str.",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057687&etag=f4fda9e5-e570-4c85-b0ec-dba01ae60395",note:"Leon 4 Tore; Tim 3 Tore; Max 1 Tor; Rocket 1 Tor; Jonas 1 Tor; Ben 1 Tor (7M 0/1)"},
   {id:"1771763577558",date:"2025-11-16",time:"12:30",round:"4. Spieltag",isHome:false,teamHome:"MSG LEMa-HVH",teamAway:"HSG Unterweser CII",scoreH:36,scoreA:25,venue:"Bremen-Lesum, VH Lesum/St. Magnus",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057649&etag=7ebe58e7-0bd3-4a60-b8e3-08c857bd64f0",note:"Leon 9 Tore (7M 0/1); Rocket 5 Tore; Max 3 Tore (7M 0/1); Luca 3 Tore (7M 0/1); Ben 3 Tore (7M 1/1); Tim 2 Tore"},
-  {id:"1771763861094",date:"2025-11-22",time:"15:00",round:"5. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Land Hadeln",scoreH:27,scoreA:44,venue:"Halle Luisenhofe, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057697&etag=0dfe4b94-5e8b-4e72-9e50-2819deda654c",note:"Leon 9 (7M 2/2); Rocket 5 Tore; Mats 5 Tore (7M 1/1); Tim 4 Tore; Max 2 Tore; Jonas 2 Tore"},
+  {id:"1771763861094",date:"2025-11-22",time:"15:00",round:"5. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Land Hadeln",scoreH:27,scoreA:44,venue:"Halle Luisenhofe, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057697&etag=0dfe4b94-5e8b-4e72-9e50-2819deda654c",note:"Leon 9 Tore (7M 2/2); Rocket 5 Tore; Mats 5 Tore (7M 1/1); Tim 4 Tore; Max 2 Tore; Jonas 2 Tore"},
   {id:"1771764066777",date:"2025-11-29",time:"11:00",round:"6. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HG Bremerhaven",scoreH:19,scoreA:41,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057699&etag=025e0020-975a-439d-8b73-6e8ba7884e08",note:"Leon 5 Tore (7M 0/1); Rocket 5 Tore (7M 0/2); Tim 4 Tore; Nils 2 Tore; Jonas 2 Tore; Luca 1 Tor (7M 0/1)"},
   {id:"1771764290942",date:"2025-12-06",time:"14:30",round:"7. Spieltag",isHome:false,teamHome:"JSG TVL/LTS/Spaden",teamAway:"HSG Unterweser CII",scoreH:35,scoreA:9,venue:"Bremerhaven-Leherheide, Hans-Gabrich-Halle",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057629&etag=dd3d071d-dac3-498d-b76a-7ecf25789cb1",note:"Rocket 3 Tore; Ben 3 Tore (7M 1/1); Jonas 2 Tore; Tim 1 Tor"},
   {id:"1771764536287",date:"2026-01-24",time:"14:30",round:"8. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG LiGra",scoreH:21,scoreA:28,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057684&etag=e5258905-38ce-4688-bef3-f6ce9eb0a2f7",note:"Leon 6 Tore (7M 1/1); Max 4 Tore; Tim 4 Tore; Rocket 3 Tore; Ben 2 Tore; Luca 1 Tor; Jonas 1 Tor (7M 1/3)"},
   {id:"1771764697194",date:"2026-02-14",time:"12:45",round:"9. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"Hagener SV",scoreH:30,scoreA:27,venue:"Luisenhof, Blexen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057638&etag=18752851-b810-41fb-bddf-90c366430088",note:"Max 9 Tore; Leon 9 Tore; Rocket 6 Tore; Luca 5 Tore; Ben 1 Tor"},
   {id:"1771764924664",date:"2026-02-22",time:"10:00",round:"10. Spieltag",isHome:false,teamHome:"HG Bremerhaven",teamAway:"HSG Unterweser CII",scoreH:29,scoreA:25,venue:"Bremerhaven-Leherheide",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057601&etag=1a222e52-f810-49de-b397-ea42f3f71e7c",note:"Max 8 Tore; Leon 5 Tore (7M 0/1); Rocket 5 Tore; Tim 4 Tore; Luca 2 Tore; Ben 1 Tor (7M 0/1)"},
-  {id:"1771765073554",date:"2026-02-27",time:"17:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Schwanewede/NK. II",scoreH:24,scoreA:34,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Rocket 5 Tore; Luca 5 Tore; Jonas 5 Tore; Ben 4 Tore (7M 0/1); Leon 3 Tore; Nils 1 Tor; Mats 1 Tor"},
-  {id:"1771765155794",date:"2026-03-01",time:"14:15",round:"12. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser CII",scoreH:35,scoreA:30,venue:"Hagen, SH Schulzentrum",pdf:"",note:"Jonas 11 Tore; Leon 7 Tore (7M 1/2); Mats 4 Tore; Rocket 4 Tore; Ben 3 Tore; Luca 1 Tor"},
-  {id:"1771765268746",date:"2026-03-07",time:"14:00",round:"13. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG RiGrOs",scoreH:27,scoreA:28,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Jonas 8 Tore; Leon 7 Tore (7M 1/2); Max 4 Tore; Rocket 3 Tore; Luca 3 Tore (7M 1/1); Tim 2 Tore"},
-  {id:"1771765440944",date:"2026-03-15",time:"12:45",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa-HVH",scoreH:27,scoreA:30,venue:"Großsporthalle Rodenkirchen",pdf:"",note:"Leon 8 Tore; Max 8 Tore (7M 0/1); Luca 5 Tore (7M 1/1); Ben 5 Tore; Rocket 1 Tor (7M 0/1)"},
-  {id:"1771765522621",date:"2026-04-11",time:"16:30",round:"15. Spieltag",isHome:false,teamHome:"HSG Land Hadeln",teamAway:"HSG Unterweser CII",venue:"Otterndorf, SH Schulzentrum",pdf:"",note:""},
-  {id:"1771765631051",date:"2026-04-18",time:"13:15",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG TVL/LTS/Spaden",venue:"Großsporthalle, Rodenkirchen",pdf:"",note:""},
+  {id:"1771765073554",date:"2026-02-27",time:"17:30",round:"11. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"HSG Schwanewede/NK. II",scoreH:24,scoreA:34,venue:"Großsporthalle Rodenkirchen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057630&etag=09b1a31e-9347-4ce5-b76e-89e82fd69368",note:"Rocket 5 Tore; Luca 5 Tore; Jonas 5 Tore; Ben 4 Tore (7M 0/1); Leon 3 Tore; Nils 1 Tor; Mats 1 Tor"},
+  {id:"1771765155794",date:"2026-03-01",time:"14:15",round:"12. Spieltag",isHome:false,teamHome:"Hagener SV",teamAway:"HSG Unterweser CII",scoreH:35,scoreA:30,venue:"Hagen, SH Schulzentrum",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057691&etag=31c28092-3754-4ac5-974b-6a9fc0536afc",note:"Jonas 11 Tore; Leon 7 Tore (7M 1/2); Mats 4 Tore; Rocket 4 Tore; Ben 3 Tore; Luca 1 Tor"},
+  {id:"1771765268746",date:"2026-03-07",time:"14:00",round:"13. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG RiGrOs",scoreH:27,scoreA:28,venue:"Großsporthalle Rodenkirchen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057623&etag=f6402a26-e3c1-4e80-b9ed-808efbbe9a88",note:"Jonas 8 Tore; Leon 7 Tore (7M 1/2); Max 4 Tore; Rocket 3 Tore; Luca 3 Tore (7M 1/1); Tim 2 Tore"},
+  {id:"1771765440944",date:"2026-03-15",time:"12:45",round:"14. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa-HVH",scoreH:27,scoreA:30,venue:"Großsporthalle Rodenkirchen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057656&etag=964c2ffe-3d05-417a-8f8d-9b57c30dbf62",note:"Leon 8 Tore; Max 8 Tore (7M 0/1); Luca 5 Tore (7M 1/1); Ben 5 Tore; Rocket 1 Tor (7M 0/1)"},
+  {id:"1771765522621",date:"2026-04-11",time:"16:30",round:"15. Spieltag",isHome:false,teamHome:"HSG Land Hadeln",teamAway:"HSG Unterweser CII",scoreH:37,scoreA:32,venue:"Otterndorf, SH Schulzentrum",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057698&etag=a037e896-5861-4add-8deb-ae7f1ff82614",note:"Leon 11 Tore (7M 2/2); Max 8 Tore; Luca 6 (7M 0/1); Tim 4; Rocket 2 Tore; Mats 1 Tor"},
+  {id:"1771765631051",date:"2026-04-18",time:"13:15",round:"16. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"JSG TVL/LTS/Spaden",scoreH:20,scoreA:48,venue:"Großsporthalle, Rodenkirchen",pdf:"https://hvnb-handball.liga.nu/cgi-bin/WebObjects/nuLigaDokumentHBDE.woa/wa/nuDokument?dokument=meetingReportHB&meeting=8057668&etag=cd80ba14-4680-4487-9b04-ae5e1c6f869d",note:"Leon 6 Tore (7 M 1/2); Max 5 Tore; Tim 5 Tore; Rocket 2 Tore; Mats 1 Tor; Luca 1 Tore"},
 ];
 
 const SEED_2026 = [
@@ -506,12 +507,13 @@ async function syncAll() {
       }
     }
 
-    LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
   } else if (data && data.seasons) {
     // Sheet erreichbar aber leer → einmalig Initialdaten einspielen (nur beim ersten Mal)
-    const cached = LS.get("hsg_v5");
+    const cached = LS.get("hsg_v6");
     if (cached && cached.seasons && cached.seasons["2025-26"] &&
         cached.seasons["2025-26"].games && cached.seasons["2025-26"].games.length > 0) {
       // localStorage ist aktueller als leeres Sheet → hochladen
@@ -526,16 +528,17 @@ async function syncAll() {
       STATE.highlights = [JSON.parse(JSON.stringify(ARNHEM_CUP))];
       await saveAll();
     }
-    LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
   } else {
     // Offline — localStorage nutzen
-    const cached = LS.get("hsg_v5");
+    const cached = LS.get("hsg_v6");
     if (cached && cached.seasons && cached.seasons["2025-26"]) {
       STATE.seasons    = cached.seasons;
       STATE.highlights = cached.highlights || [];
-      setBanner("&#9651; Offline — lokale Daten", false);
+      setBanner("&#9651; Offline — lokale Daten" + (function(){var _t=LS.get("hsg_cachedAt");return _t?" &middot; Stand "+fmtTs(_t):"";})(), false);
     } else {
       STATE.seasons["2025-26"].games = SEED_2025;
       STATE.seasons["2025-26"].rank  = 9;
@@ -544,13 +547,13 @@ async function syncAll() {
     }
   }
   const _seeded26 = normalizeSeasons();
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
   if (_seeded26 && data && data.seasons) { await saveAll(); }
   renderActive();
 }
 
 async function saveAll() {
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
   const ok = await gsWrite({
     seasons: STATE.seasons,
     highlights: STATE.highlights,
@@ -569,6 +572,11 @@ function setBanner(msg, ok) {
   b.innerHTML = msg;
   b.className = "gs-banner " + (ok ? "ok" : "err");
 }
+
+function fmtTs(ms){ try{ var d=new Date(ms); var p=function(n){return (n<10?"0":"")+n;};
+  return p(d.getDate())+"."+p(d.getMonth()+1)+"."+d.getFullYear()+" "+p(d.getHours())+":"+p(d.getMinutes()); }catch(e){ return ""; } }
+function hardReload(){ try{ Object.keys(localStorage).forEach(function(k){ if(k.indexOf("hsg_")===0) localStorage.removeItem(k); }); }catch(e){}
+  location.reload(); }
 
 // ═══════════════════════════════════════
 // NAVIGATION & SAISON
@@ -952,7 +960,7 @@ function bracketAusCodeLaden(hlIdx) {
   if(!hl) return;
   // Nur das bracket überschreiben, games/fotos/platzierung bleiben erhalten
   hl.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
   saveAll().then(ok => {
     toast(ok ? "&#9989; Bracket aktualisiert und gespeichert" : "&#9651; Bracket lokal aktualisiert");
     renderHighlights();
@@ -1007,7 +1015,7 @@ function bereinigeDuplikate(hlIdx) {
 
   // Direkt in STATE schreiben und sofort lokal speichern
   STATE.highlights[hlIdx].games = result;
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
 
   // Sofort neu rendern damit Nutzer Ergebnis sieht
   renderHighlights();
@@ -1151,7 +1159,7 @@ function saveTorschuetzen(hlIdx) {
   });
 
   // Sofort STATE updaten und rendern, dann speichern
-  LS.set("hsg_v5", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
   hlTab(hlIdx, "torjaeger"); // Sofort aktualisieren
   toast("&#9989; Torschützen gespeichert — wird synchronisiert...");
   saveAll().then(ok => toast(ok ? "&#9989; Gespeichert" : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen"));
