@@ -300,7 +300,15 @@ const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
 const ARNHEM_CUP = {
   name:"Arnhem Handball Cup 2026", typ:"turnier", ort:"Arnhem (Arnheim; NL)",
   datum:"2026-04-04", beschreibung:"Arnheim Handball Cup vom 04.04.-05.04.2026",
-  website:"https://www.arnhem-cup.nl/de", games:[], fotos:[],
+  website:"https://www.arnhem-cup.nl/de", games:[], fotos:[
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/20260403_Abfahrt_Arnhem_CI_CII.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_Veranstaltungsorte.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_MannschaftenU15.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_Spielplan_1_U15.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_Spielplan_1_GruppeB_U15.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_Spielplan_2_U15.jpg",
+    "https://nboeger-hsg.github.io/HSG-Unterweser/turniere/Niederlande-2026/Arnhem_Spielplan_3_U15.jpg"
+  ],
   bracket:{
     groups:[
       {name:"Gruppe A", advance:2, teams:[
@@ -500,11 +508,18 @@ async function syncAll() {
       const codeMatches  = codeRounds.reduce((n,r)=>n+(r.matches||[]).length,0);
       const sheetScored  = sheetRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
       const codeScored   = codeRounds.reduce((n,r)=>n+(r.matches||[]).filter(m=>m.scoreH!==''&&m.scoreH!==undefined&&m.scoreH!==null).length,0);
+      let _arnChanged = false;
       if (sheetRounds.length < codeRounds.length || sheetMatches < codeMatches || sheetScored < codeScored) {
         // Code hat mehr Daten → Runden aus Code übernehmen, aber Torschützen-Notes aus Sheet erhalten
         arn.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
-        await saveAll();
+        _arnChanged = true;
       }
+      // Fotos/Screenshots aus Code wiederherstellen, wenn im Sheet keine vorhanden sind
+      if (!(arn.fotos && arn.fotos.length) && ARNHEM_CUP.fotos.length) {
+        arn.fotos = ARNHEM_CUP.fotos.slice();
+        _arnChanged = true;
+      }
+      if (_arnChanged) await saveAll();
     }
 
     LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
@@ -1978,7 +1993,7 @@ function renderEnter() {
     <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white)">NBoeger</div>
     <div style="font-size:11px;color:var(--muted);margin-top:2px">Systemverantwortlicher &amp; Entwickler</div>
     <a href="mailto:nboeger.nb@gmail.com" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--blue2);text-decoration:none">nboeger.nb@gmail.com</a>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:10px;color:var(--muted)">HSG Unterweser CII · App Version 5.0</div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:10px;color:var(--muted)">HSG Unterweser CII · App Version 6.0</div>
   </div>`;
 
   el.innerHTML = h;
@@ -2109,12 +2124,12 @@ function doPost(e) {
 // ═══════════════════════════════════════
 function renderImpressum() {
   const INFO_URL = "https://nboeger-hsg.github.io/HSG-Unterweser/info.html";
-  const WA_TEXT = encodeURIComponent("🤾 HSG Unterweser CII App – Version 5 ist da!\n\nSpielplan, Torjäger, Turniere & Fotos – alles auf einen Blick.\n\n👉 App öffnen:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/\n\n📲 Anleitung zum Speichern auf dem Startbildschirm:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/info.html");
+  const WA_TEXT = encodeURIComponent("🤾 HSG Unterweser CII App – Version 6 ist da!\n\nSpielplan, Torjäger, Turniere & Fotos – alles auf einen Blick.\n\n👉 App öffnen:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/\n\n📲 Anleitung zum Speichern auf dem Startbildschirm:\nhttps://nboeger-hsg.github.io/HSG-Unterweser/info.html");
   const WA_URL = "https://wa.me/?text=" + WA_TEXT;
   const infoCard = `
     <div style="background:linear-gradient(135deg,rgba(30,111,224,.15),rgba(30,111,224,.05));border:1px solid rgba(30,111,224,.35);border-radius:14px;padding:18px;margin-bottom:14px;text-align:center">
       <div style="font-size:28px;margin-bottom:8px">🆕</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px">Was ist neu in Version 5?</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px">Was ist neu in Version 6?</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Alle Neuerungen & Installationsanleitung</div>
       <a href="${INFO_URL}" target="_blank" style="display:block;padding:11px;background:var(--blue);border-radius:10px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;text-decoration:none;margin-bottom:8px">&#128065; Info-Seite öffnen</a>
       <a href="${WA_URL}" target="_blank" style="display:block;padding:11px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:10px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#25d366;text-decoration:none">&#128172; Per WhatsApp teilen</a>
@@ -2182,13 +2197,13 @@ function renderImpressum() {
   <div class="shdr">Technische Informationen</div>
   <div class="card">
     ${[
-      ["App-Version","5.0 – HSG Unterweser CII"],
+      ["App-Version","6.0 – HSG Unterweser CII"],
       ["Web-Adresse","nboeger-hsg.github.io/HSG-Unterweser"],
       ["Entwickler","NBoeger"],
       ["Technologie","HTML5 · Vanilla JavaScript · CSS3"],
       ["Datenspeicher","Google Sheets (Google Ireland Ltd.)"],
       ["Offline-Cache","Browser localStorage"],
-      ["Stand","Februar 2026"],
+      ["Stand","August 2026"],
     ].map(([k,v],i,arr)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;${i<arr.length-1?'border-bottom:1px solid var(--b1)':''}">
       <span style="font-size:11px;color:var(--muted)">${k}</span>
       <span style="font-size:11px;color:var(--white);font-weight:600;text-align:right;max-width:60%">${v}</span>
