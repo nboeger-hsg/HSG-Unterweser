@@ -291,10 +291,42 @@ const ADMIN_PIN = "1967";
 const GS_URL = "https://script.google.com/macros/s/AKfycbzXMYtSQugeXZVVk-0BGCLnG6U0p00foR1weGf3cHdHDt_lLfgqnxbyJrWiBydzyuWFYA/exec";
 const FOTO_BASE = "https://nboeger-hsg.github.io/HSG-Unterweser/";
 const FOTOS = [2,11,12,13,14,15,16,18,19,20,21,23,24,35,41,42,67,68,74,75,76,77,78,80,81,91,92,102,108,109,110,111,119,122,124,126,127,133];
-const SONG_BASE = FOTO_BASE; // gleiches GitHub-Pages-Repo
+/* ═══════════════════════════════════════════════════════════════
+   ANLEITUNG · SONGS VERWALTEN  (GitHub-Weboberfläche)
+   ───────────────────────────────────────────────────────────────
+   Ordner "songs/" anlegen (nur beim ersten Mal nötig):
+     1. Repo-Startseite → Button "Add file" → "Create new file"
+     2. Dateiname eingeben:  songs/README.md
+        (Das "songs/" im Pfad erzeugt den Ordner automatisch.)
+     3. Beliebiger Inhalt (z.B. "Teamsongs") → unten "Commit changes"
+
+   MP3-Dateien hochladen:
+     4. In den Ordner "songs" klicken (hineinwechseln!)
+     5. "Add file" → "Upload files" → MP3s per Drag&Drop hineinziehen
+     6. "Commit changes"
+        Dateinamen müssen exakt den "file:"-Werten unten entsprechen
+        (Groß/Kleinschreibung zählt).
+
+   Diese index.html aktualisieren:
+     7. Repo-Root → "Add file" → "Upload files" → neue index.html
+        hineinziehen (gleicher Name ersetzt die alte) → "Commit changes"
+        GitHub Pages baut danach automatisch neu (1-2 Minuten).
+
+   Neuen Song ergänzen:
+     - MP3 nach songs/ hochladen
+     - eine Zeile im SONGS-Array unten ergänzen  {title:"...", file:"...mp3"}
+     - committen. Fertig.
+
+   Prüf-URL im Browser (Beispiel):
+     https://nboeger-hsg.github.io/HSG-Unterweser/songs/HSG_Fan_Lied.mp3
+   ═══════════════════════════════════════════════════════════════ */
+const SONG_BASE = FOTO_BASE + "songs/"; // Unterordner /songs im GitHub-Pages-Repo
 const SONGS = [
-  // Neuer Song: MP3 ins Repo + eine Zeile hier + committen
-  // {title:"Einlaufhymne", file:"song_einlauf.mp3"},
+  // Neuer Song: MP3 in den Ordner /songs im Repo legen + eine Zeile hier + committen
+  {title:"Feuer für die HSG (Remix)", file:"Feuer_fuer_die_HSG_Remix.mp3"},
+  {title:"Feuer für die HSG II",      file:"Feuer_fuer_die_HSG_II.mp3"},
+  {title:"HSG Eskalation",            file:"HSG_Eskalation.mp3"},
+  {title:"HSG Fan-Lied",              file:"HSG_Fan_Lied.mp3"},
 ];
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
 const ARNHEM_CUP = {
@@ -1911,7 +1943,7 @@ function renderSongs() {
         &#127925; ${s.title}
       </div>
       <audio controls preload="none" style="width:100%">
-        <source src="${SONG_BASE}${s.file}" type="audio/mpeg"/>
+        <source src="${SONG_BASE}${encodeURIComponent(s.file)}" type="audio/mpeg"/>
         Dein Browser unterstützt keine Audiowiedergabe.
       </audio>
     </div>`).join("");
