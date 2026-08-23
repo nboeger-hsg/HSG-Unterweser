@@ -215,8 +215,8 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
   <!-- GS STATUS -->
   <div class="gs-banner ok" id="gsBanner">&#9679; Verbinde mit Google Sheets...</div>
 
-  <!-- SAISON SWITCHER (sichtbar in Übersicht/Saison/Torjäger/Spielplan) -->
-  <div class="season-bar" id="seasonBar" style="display:none">
+  <!-- SAISON SWITCHER (global immer sichtbar über der Menüzeile) -->
+  <div class="season-bar" id="seasonBar">
     <div class="season-btn active" id="sbtn-2025-26" onclick="switchSeason('2025-26')">2025 / 26</div>
     <div class="season-btn" id="sbtn-2026-27" onclick="switchSeason('2026-27')">2026 / 27</div>
   </div>
@@ -554,13 +554,13 @@ async function syncAll() {
       if (_arnChanged) await saveAll();
     }
 
-    LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
     LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
   } else if (data && data.seasons) {
     // Sheet erreichbar aber leer → einmalig Initialdaten einspielen (nur beim ersten Mal)
-    const cached = LS.get("hsg_v6");
+    const cached = LS.get("hsg_v7");
     if (cached && cached.seasons && cached.seasons["2025-26"] &&
         cached.seasons["2025-26"].games && cached.seasons["2025-26"].games.length > 0) {
       // localStorage ist aktueller als leeres Sheet → hochladen
@@ -575,13 +575,13 @@ async function syncAll() {
       STATE.highlights = [JSON.parse(JSON.stringify(ARNHEM_CUP))];
       await saveAll();
     }
-    LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
     LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
   } else {
     // Offline — localStorage nutzen
-    const cached = LS.get("hsg_v6");
+    const cached = LS.get("hsg_v7");
     if (cached && cached.seasons && cached.seasons["2025-26"]) {
       STATE.seasons    = cached.seasons;
       STATE.highlights = cached.highlights || [];
@@ -594,13 +594,13 @@ async function syncAll() {
     }
   }
   const _seeded26 = normalizeSeasons();
-  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
   if (_seeded26 && data && data.seasons) { await saveAll(); }
   renderActive();
 }
 
 async function saveAll() {
-  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
   const ok = await gsWrite({
     seasons: STATE.seasons,
     highlights: STATE.highlights,
@@ -628,7 +628,6 @@ function hardReload(){ try{ Object.keys(localStorage).forEach(function(k){ if(k.
 // ═══════════════════════════════════════
 // NAVIGATION & SAISON
 // ═══════════════════════════════════════
-const SEASON_TABS = ["overview","saison","torjaeger","spielplan"];
 
 function showTab(id, el) {
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
@@ -636,9 +635,8 @@ function showTab(id, el) {
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("view-"+id).classList.add("on");
   STATE.activeTab = id;
-  // Saison-Switcher nur bei relevanten Tabs zeigen
-  document.getElementById("seasonBar").style.display =
-    SEASON_TABS.includes(id) ? "flex" : "none";
+  // Saison-Switcher global immer sichtbar
+  document.getElementById("seasonBar").style.display = "flex";
   renderActive();
 }
 
@@ -1007,7 +1005,7 @@ function bracketAusCodeLaden(hlIdx) {
   if(!hl) return;
   // Nur das bracket überschreiben, games/fotos/platzierung bleiben erhalten
   hl.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
-  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
   saveAll().then(ok => {
     toast(ok ? "&#9989; Bracket aktualisiert und gespeichert" : "&#9651; Bracket lokal aktualisiert");
     renderHighlights();
@@ -1062,7 +1060,7 @@ function bereinigeDuplikate(hlIdx) {
 
   // Direkt in STATE schreiben und sofort lokal speichern
   STATE.highlights[hlIdx].games = result;
-  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
 
   // Sofort neu rendern damit Nutzer Ergebnis sieht
   renderHighlights();
@@ -1206,7 +1204,7 @@ function saveTorschuetzen(hlIdx) {
   });
 
   // Sofort STATE updaten und rendern, dann speichern
-  LS.set("hsg_v6", {seasons: STATE.seasons, highlights: STATE.highlights});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights});
   hlTab(hlIdx, "torjaeger"); // Sofort aktualisieren
   toast("&#9989; Torschützen gespeichert — wird synchronisiert...");
   saveAll().then(ok => toast(ok ? "&#9989; Gespeichert" : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen"));
