@@ -2007,6 +2007,13 @@ function renderEnter() {
     <button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewGame()">&#43; Neues Spiel (2026/27)</button>
   </div>`;
 
+  // Datensicherung
+  h += `<div class="shdr">Datensicherung</div>
+  <div class="card">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
+    <button class="btn btn-g btn-sm" onclick="backupData()">&#128190; Daten jetzt sichern</button>
+  </div>`;
+
   // Apps Script
   h += `<div class="shdr">Google Sheets</div>
   <div class="card">
@@ -2259,6 +2266,25 @@ function checkPin() {
 function updateAdminUI() {
   document.getElementById("adminDot").style.display=STATE.isAdmin?"block":"none";
   document.getElementById("btnPin").style.display=STATE.isAdmin?"none":"block";
+}
+
+function backupData() {
+  try {
+    if(!STATE.seasons) { toast("&#10006; Keine Daten zum Sichern"); return; }
+    const data = { seasons: STATE.seasons, highlights: STATE.highlights || [] };
+    const pretty = JSON.stringify(data, null, 2);
+    const d = new Date(), p = n => (n<10?"0":"")+n;
+    const stamp = d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes());
+    const blob = new Blob([pretty], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "hsg_backup_"+stamp+".json";
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast("&#128190; Sicherung erstellt");
+  } catch(e) {
+    toast("&#10006; Sicherung fehlgeschlagen");
+  }
 }
 let toastTimer;
 function toast(msg) {
