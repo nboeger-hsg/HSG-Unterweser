@@ -342,6 +342,12 @@ function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
    Prüf-URL im Browser (Beispiel):
      https://nboeger-hsg.github.io/HSG-Unterweser/songs/Teamsongs/HSG_Fan_Lied.mp3
    ═══════════════════════════════════════════════════════════════ */
+// MIME-Type anhand der Dateiendung ermitteln (u.a. .m4a braucht audio/mp4,
+// nicht audio/mpeg — sonst spielen manche Browser/Safari die Datei nicht ab).
+function audioMime(file) {
+  const ext = (file||"").split(".").pop().toLowerCase();
+  return {mp3:"audio/mpeg", m4a:"audio/mp4", aac:"audio/aac", wav:"audio/wav", ogg:"audio/ogg"}[ext] || "audio/mpeg";
+}
 const SONG_BASE = FOTO_BASE + "songs/Teamsongs/";
 const SONGS = [
   // Neuer Song: MP3 in den Ordner /songs im Repo legen + eine Zeile hier + committen
@@ -2143,7 +2149,7 @@ function renderTeamsongsHTML() {
         &#127925; ${s.title}
       </div>
       <audio controls preload="none" style="width:100%">
-        <source src="${SONG_BASE}${encodeURIComponent(s.file)}" type="audio/mpeg"/>
+        <source src="${SONG_BASE}${encodeURIComponent(s.file)}" type="${audioMime(s.file)}"/>
         Dein Browser unterstützt keine Audiowiedergabe.
       </audio>
     </div>`).join("");
@@ -2213,7 +2219,7 @@ function renderJinglesHTML() {
         &#9917; ${j.title}${isMine?' <span style="font-size:10px;color:var(--blue2);font-weight:700">&#9989; deine Stimme</span>':''}
       </div>
       <audio controls preload="none" style="width:100%;margin-bottom:8px">
-        <source src="${JINGLE_BASE}${encodeURIComponent(j.file)}" type="audio/mpeg"/>
+        <source src="${JINGLE_BASE}${encodeURIComponent(j.file)}" type="${audioMime(j.file)}"/>
         Dein Browser unterstützt keine Audiowiedergabe.
       </audio>
       <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${barPct}%"></div></div>
