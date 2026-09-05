@@ -342,6 +342,12 @@ function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
    Prüf-URL im Browser (Beispiel):
      https://nboeger-hsg.github.io/HSG-Unterweser/songs/Teamsongs/HSG_Fan_Lied.mp3
    ═══════════════════════════════════════════════════════════════ */
+// MIME-Type anhand der Dateiendung ermitteln (u.a. .m4a braucht audio/mp4,
+// nicht audio/mpeg — sonst spielen manche Browser/Safari die Datei nicht ab).
+function audioMime(file) {
+  const ext = (file||"").split(".").pop().toLowerCase();
+  return {mp3:"audio/mpeg", m4a:"audio/mp4", aac:"audio/aac", wav:"audio/wav", ogg:"audio/ogg"}[ext] || "audio/mpeg";
+}
 const SONG_BASE = FOTO_BASE + "songs/Teamsongs/";
 const SONGS = [
   // Neuer Song: MP3 in den Ordner /songs im Repo legen + eine Zeile hier + committen
@@ -363,8 +369,24 @@ const SONGS = [
    ═══════════════════════════════════════════════════════════════ */
 const JINGLE_BASE = FOTO_BASE + "songs/Tor-Jingles/";
 const JINGLES = [
-  // Neuer Tor-Jingle: MP3 in den Ordner /jingles legen + eine Zeile hier + committen
-  // {id:"j1", title:"...", file:"....mp3"},
+  // Neuer Tor-Jingle: Datei nach songs/Tor-Jingles/ legen + eine Zeile hier + committen
+  {id:"j-mockingbird",      title:"Mockingbird",       file:"01 Mockingbird.m4a"},
+  {id:"j-affen-1",          title:"Affen I",           file:"Affen I.m4a"},
+  {id:"j-affen-2",          title:"Affen II",          file:"Affen II.m4a"},
+  {id:"j-das-geht-ab",      title:"Das geht ab",       file:"Das geht ab.m4a"},
+  {id:"j-drink-tor-1",      title:"Drink Tor I",       file:"Drink Tor I.m4a"},
+  {id:"j-enter-sandman",    title:"Enter Sandman",     file:"Enter Sandman.m4a"},
+  {id:"j-feuer-hsg-2",      title:"Feuer HSG II",      file:"Feuer HSG II.m4a"},
+  {id:"j-fire",             title:"Fire",              file:"Fire.m4a"},
+  {id:"j-hsg-eskalation",   title:"HSG Eskalation",    file:"HSG Eskalation.m4a"},
+  {id:"j-horn-to-eden",     title:"Horn to Eden",      file:"Horn_ToEden.m4a"},
+  {id:"j-kernkraft-stadion",title:"Kernkraft Stadion", file:"Kernkraft Stadion.m4a"},
+  {id:"j-meet-her",         title:"Meet Her",          file:"MeetHer.m4a"},
+  {id:"j-popcorn",          title:"Popcorn",           file:"Popcorn.m4a"},
+  {id:"j-sandstorm",        title:"Sandstorm",         file:"Sandstorm.m4a"},
+  {id:"j-the-glen",         title:"The Glen",          file:"The Glen.m4a"},
+  {id:"j-tiamo-2",          title:"Ti Amo II",         file:"TiAmo II.m4a"},
+  {id:"j-yeah",             title:"Yeah",              file:"Yeah.m4a"},
 ];
 
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
@@ -2143,7 +2165,7 @@ function renderTeamsongsHTML() {
         &#127925; ${s.title}
       </div>
       <audio controls preload="none" style="width:100%">
-        <source src="${SONG_BASE}${encodeURIComponent(s.file)}" type="audio/mpeg"/>
+        <source src="${SONG_BASE}${encodeURIComponent(s.file)}" type="${audioMime(s.file)}"/>
         Dein Browser unterstützt keine Audiowiedergabe.
       </audio>
     </div>`).join("");
@@ -2213,7 +2235,7 @@ function renderJinglesHTML() {
         &#9917; ${j.title}${isMine?' <span style="font-size:10px;color:var(--blue2);font-weight:700">&#9989; deine Stimme</span>':''}
       </div>
       <audio controls preload="none" style="width:100%;margin-bottom:8px">
-        <source src="${JINGLE_BASE}${encodeURIComponent(j.file)}" type="audio/mpeg"/>
+        <source src="${JINGLE_BASE}${encodeURIComponent(j.file)}" type="${audioMime(j.file)}"/>
         Dein Browser unterstützt keine Audiowiedergabe.
       </audio>
       <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${barPct}%"></div></div>
