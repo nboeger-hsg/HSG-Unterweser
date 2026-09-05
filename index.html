@@ -331,35 +331,18 @@ const FOTOS = {
 };
 function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
 /* ═══════════════════════════════════════════════════════════════
-   ANLEITUNG · SONGS VERWALTEN  (GitHub-Weboberfläche)
+   ANLEITUNG · SONGS VERWALTEN
    ───────────────────────────────────────────────────────────────
-   Ordner "songs/" anlegen (nur beim ersten Mal nötig):
-     1. Repo-Startseite → Button "Add file" → "Create new file"
-     2. Dateiname eingeben:  songs/README.md
-        (Das "songs/" im Pfad erzeugt den Ordner automatisch.)
-     3. Beliebiger Inhalt (z.B. "Teamsongs") → unten "Commit changes"
-
-   MP3-Dateien hochladen:
-     4. In den Ordner "songs" klicken (hineinwechseln!)
-     5. "Add file" → "Upload files" → MP3s per Drag&Drop hineinziehen
-     6. "Commit changes"
-        Dateinamen müssen exakt den "file:"-Werten unten entsprechen
-        (Groß/Kleinschreibung zählt).
-
-   Diese index.html aktualisieren:
-     7. Repo-Root → "Add file" → "Upload files" → neue index.html
-        hineinziehen (gleicher Name ersetzt die alte) → "Commit changes"
-        GitHub Pages baut danach automatisch neu (1-2 Minuten).
-
-   Neuen Song ergänzen:
-     - MP3 nach songs/ hochladen
+   MP3s liegen in songs/Teamsongs/. Neuer Song:
+     - MP3 nach songs/Teamsongs/ legen
      - eine Zeile im SONGS-Array unten ergänzen  {title:"...", file:"...mp3"}
-     - committen. Fertig.
+       (Dateiname muss exakt passen, Groß/Kleinschreibung zählt)
+     - committen & pushen. Fertig.
 
    Prüf-URL im Browser (Beispiel):
-     https://nboeger-hsg.github.io/HSG-Unterweser/songs/HSG_Fan_Lied.mp3
+     https://nboeger-hsg.github.io/HSG-Unterweser/songs/Teamsongs/HSG_Fan_Lied.mp3
    ═══════════════════════════════════════════════════════════════ */
-const SONG_BASE = FOTO_BASE + "songs/"; // Unterordner /songs im GitHub-Pages-Repo
+const SONG_BASE = FOTO_BASE + "songs/Teamsongs/";
 const SONGS = [
   // Neuer Song: MP3 in den Ordner /songs im Repo legen + eine Zeile hier + committen
   {title:"Feuer für die HSG (Remix)", file:"Feuer_fuer_die_HSG_Remix.mp3"},
@@ -369,19 +352,16 @@ const SONGS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════
-   ANLEITUNG · TOR-JINGLE ERGÄNZEN  (GitHub-Weboberfläche, wie bei Songs)
+   ANLEITUNG · TOR-JINGLE ERGÄNZEN
    ───────────────────────────────────────────────────────────────
-     1. Ordner "jingles" anlegen (nur beim ersten Mal nötig): Repo-Root →
-        "Add file" → "Create new file" → Dateiname "jingles/README.md" →
-        beliebiger Inhalt → "Commit changes"
-     2. In den Ordner "jingles" wechseln → "Add file" → "Upload files" →
-        MP3 hineinziehen → "Commit changes"
-     3. Eine Zeile im JINGLES-Array unten ergänzen: {id:"...", title:"...",
-        file:"...mp3"} — id muss eindeutig sein und bleibt stabil (wird für
-        die Abstimmung gespeichert, also nicht mehr ändern nach dem Start).
-     4. Diese index.html hochladen (ersetzt die alte) → "Commit changes"
+   MP3s liegen in songs/Tor-Jingles/. Neuer Jingle:
+     - MP3 nach songs/Tor-Jingles/ legen
+     - eine Zeile im JINGLES-Array unten ergänzen: {id:"...", title:"...",
+       file:"...mp3"} — id muss eindeutig sein und bleibt stabil (wird für
+       die Abstimmung gespeichert, also nicht mehr ändern nach dem Start).
+     - committen & pushen. Fertig.
    ═══════════════════════════════════════════════════════════════ */
-const JINGLE_BASE = FOTO_BASE + "jingles/";
+const JINGLE_BASE = FOTO_BASE + "songs/Tor-Jingles/";
 const JINGLES = [
   // Neuer Tor-Jingle: MP3 in den Ordner /jingles legen + eine Zeile hier + committen
   // {id:"j1", title:"...", file:"....mp3"},
