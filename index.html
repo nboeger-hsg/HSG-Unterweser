@@ -2490,6 +2490,11 @@ function renderEnter() {
   <div class="card">
     <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Team) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
     <button class="btn btn-g btn-sm" onclick="backupData()">&#128190; Daten jetzt sichern</button>
+  </div>
+  <div class="card" style="border-color:rgba(240,165,0,.3)">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Spielt eine zuvor gesicherte <code>hsg_backup_&lt;Datum&gt;.json</code> zurück. <strong style="color:var(--amber2)">Achtung:</strong> Ersetzt Spielpläne, Highlights, Team und Tor-Jingle-Stimmen vollständig durch den Inhalt der Datei — nur nutzen, um Daten nach einem Verlust wiederherzustellen.</div>
+    <input type="file" id="restoreFile" accept="application/json,.json" style="margin-bottom:8px"/>
+    <button class="btn btn-d btn-sm" onclick="restoreBackup()">&#9888; Backup wiederherstellen</button>
   </div>`;
 
   // Apps Script
@@ -2671,53 +2676,183 @@ function addNewGame() {
 }
 
 function copyAppsScript() {
-  const code = `function doGet(e) {
-  var ss = SpreadsheetApp.openById("1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E");
-  var sheet = ss.getSheetByName("Daten") || ss.insertSheet("Daten");
-  var raw = sheet.getRange(1,1).getValue();
-  var result = raw ? JSON.parse(raw) : {seasons:{},highlights:[]};
+  const code = `// HSG Unterweser CII — Apps Script Backend (v2: echte Tabellenblätter statt
+// ein JSON-Block in Zelle A1). Speichert Spiele, Team, Highlights und
+// Tor-Jingle-Stimmen jeweils in eigenen, unabhängig wachsenden Tabellenblättern
+// statt in einer gemeinsamen Zelle mit hartem 50.000-Zeichen-Limit.
+// Die App selbst spricht weiterhin dieselbe JSON-Form (seasons/highlights/
+// players/jingleVotes) — an der Web-App muss dafür nichts geändert werden.
+
+var SHEET_ID = "1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E";
+var SEASONS_HEADERS = ["season","name","rank"];
+var GAMES_HEADERS = ["id","season","date","time","round","isHome","teamHome","teamAway","scoreH","scoreA","venue","pdf","note"];
+var PLAYERS_HEADERS = ["id","vorname","nummer","position","geburtstag","fotoUrl","lieblingsfarbe","lieblingstier","lieblingsessen","paradenAktuell","paradenVorsaison"];
+var VOTES_HEADERS = ["playerId","jingleId","ts"];
+var HIGHLIGHTS_HEADERS = ["id","name","typ","ort","datum","beschreibung","website","extra_json"];
+
+function doGet(e) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
   var action = e.parameter.action || "read";
   var cb = e.parameter.callback;
-
-  if (action === "write") {
-    var dataParam = e.parameter.data;
-    if (dataParam) {
-      sheet.getRange(1,1).setValue(dataParam);
-    }
-    var writePayload = JSON.stringify({ok:true});
-    if (cb) {
-      return ContentService
-        .createTextOutput(cb + "(" + writePayload + ")")
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
-    }
-    return ContentService
-      .createTextOutput(writePayload)
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  var payload = JSON.stringify({ok:true, data:result});
-  if (cb) {
-    return ContentService
-      .createTextOutput(cb + "(" + payload + ")")
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService
-    .createTextOutput(payload)
-    .setMimeType(ContentService.MimeType.JSON);
+  if (action === "write") return respond({ok:true}, cb);
+  return respond({ok:true, data: readAll(ss)}, cb);
 }
 
 function doPost(e) {
-  var ss = SpreadsheetApp.openById(\"1UHvZH6Ic7qLCwLkyQbEoiihaQbhH2eCVxE0xePmt54E\");
-  var sheet = ss.getSheetByName(\"Daten\") || ss.insertSheet(\"Daten\");
+  var ss = SpreadsheetApp.openById(SHEET_ID);
   try {
     var body = JSON.parse(e.postData.contents);
-    if (body.action === \"write\" && body.data) {
-      sheet.getRange(1,1).setValue(JSON.stringify(body.data));
-    }
-  } catch(err) {}
-  return ContentService
-    .createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
+    if (body.action === "write" && body.data) writeAll(ss, body.data);
+  } catch (err) {}
+  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function respond(payload, cb) {
+  var json = JSON.stringify(payload);
+  if (cb) return ContentService.createTextOutput(cb + "(" + json + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+}
+
+function readAll(ss) {
+  var metaRows = readRows(getSheet(ss, "Meta", SEASONS_HEADERS));
+  var gameRows = readRows(getSheet(ss, "Spiele", GAMES_HEADERS));
+  var playerRows = readRows(getSheet(ss, "Spieler", PLAYERS_HEADERS));
+  var voteRows = readRows(getSheet(ss, "JingleVotes", VOTES_HEADERS));
+  var hlRows = readRows(getSheet(ss, "Highlights", HIGHLIGHTS_HEADERS));
+
+  var seasons = {};
+  metaRows.forEach(function(r) {
+    seasons[String(r.season)] = { name: r.name || "", rank: (r.rank === "" || r.rank == null) ? null : Number(r.rank), games: [] };
+  });
+  gameRows.forEach(function(g) {
+    var sid = String(g.season);
+    if (!seasons[sid]) seasons[sid] = { name: "", rank: null, games: [] };
+    var game = {
+      id: String(g.id), date: g.date || "", time: g.time || "", round: g.round || "",
+      isHome: g.isHome === true || g.isHome === "true" || g.isHome === "TRUE" || g.isHome === 1,
+      teamHome: g.teamHome || "", teamAway: g.teamAway || "", venue: g.venue || "",
+      pdf: g.pdf || "", note: g.note || ""
+    };
+    if (g.scoreH !== "" && g.scoreH != null) game.scoreH = Number(g.scoreH);
+    if (g.scoreA !== "" && g.scoreA != null) game.scoreA = Number(g.scoreA);
+    seasons[sid].games.push(game);
+  });
+
+  var players = playerRows.map(function(p) {
+    var obj = {
+      id: String(p.id), vorname: p.vorname || "", nummer: (p.nummer === "" || p.nummer == null) ? "" : p.nummer,
+      position: p.position || "", geburtstag: p.geburtstag || "", fotoUrl: p.fotoUrl || "",
+      lieblingsfarbe: p.lieblingsfarbe || "", lieblingstier: p.lieblingstier || "", lieblingsessen: p.lieblingsessen || ""
+    };
+    if (p.paradenAktuell !== "" && p.paradenAktuell != null) obj.paradenAktuell = Number(p.paradenAktuell);
+    if (p.paradenVorsaison !== "" && p.paradenVorsaison != null) obj.paradenVorsaison = Number(p.paradenVorsaison);
+    return obj;
+  });
+
+  var jingleVotes = {};
+  voteRows.forEach(function(v) {
+    if (!v.playerId) return;
+    jingleVotes[String(v.playerId)] = { jingleId: v.jingleId, ts: Number(v.ts) };
+  });
+
+  var highlights = hlRows.map(function(h) {
+    var extra = {};
+    try { extra = JSON.parse(h.extra_json || "{}"); } catch (err) {}
+    var base = { id: String(h.id), name: h.name || "", typ: h.typ || "", ort: h.ort || "", datum: h.datum || "", beschreibung: h.beschreibung || "", website: h.website || "" };
+    for (var k in extra) base[k] = extra[k];
+    return base;
+  });
+
+  return { seasons: seasons, highlights: highlights, players: players, jingleVotes: jingleVotes };
+}
+
+function writeAll(ss, data) {
+  if (data.seasons) {
+    var metaRows = [];
+    var gameRows = [];
+    Object.keys(data.seasons).forEach(function(sid) {
+      var s = data.seasons[sid] || {};
+      metaRows.push({ season: sid, name: s.name || "", rank: (s.rank == null ? "" : s.rank) });
+      (s.games || []).forEach(function(g) {
+        gameRows.push({
+          id: g.id, season: sid, date: g.date || "", time: g.time || "", round: g.round || "",
+          isHome: !!g.isHome, teamHome: g.teamHome || "", teamAway: g.teamAway || "",
+          scoreH: (g.scoreH === undefined ? "" : g.scoreH), scoreA: (g.scoreA === undefined ? "" : g.scoreA),
+          venue: g.venue || "", pdf: g.pdf || "", note: g.note || ""
+        });
+      });
+    });
+    writeRows(getSheet(ss, "Meta", SEASONS_HEADERS), SEASONS_HEADERS, metaRows);
+    writeRows(getSheet(ss, "Spiele", GAMES_HEADERS), GAMES_HEADERS, gameRows);
+  }
+
+  if (data.players) {
+    var playerRows = data.players.map(function(p) {
+      return {
+        id: p.id, vorname: p.vorname || "", nummer: (p.nummer == null ? "" : p.nummer),
+        position: p.position || "", geburtstag: p.geburtstag || "", fotoUrl: p.fotoUrl || "",
+        lieblingsfarbe: p.lieblingsfarbe || "", lieblingstier: p.lieblingstier || "", lieblingsessen: p.lieblingsessen || "",
+        paradenAktuell: (p.paradenAktuell == null ? "" : p.paradenAktuell),
+        paradenVorsaison: (p.paradenVorsaison == null ? "" : p.paradenVorsaison)
+      };
+    });
+    writeRows(getSheet(ss, "Spieler", PLAYERS_HEADERS), PLAYERS_HEADERS, playerRows);
+  }
+
+  if (data.jingleVotes) {
+    var voteRows = Object.keys(data.jingleVotes).map(function(playerId) {
+      var v = data.jingleVotes[playerId] || {};
+      return { playerId: playerId, jingleId: v.jingleId || "", ts: v.ts || "" };
+    });
+    writeRows(getSheet(ss, "JingleVotes", VOTES_HEADERS), VOTES_HEADERS, voteRows);
+  }
+
+  if (data.highlights) {
+    var hlRows = data.highlights.map(function(h) {
+      var extra = {};
+      var flatKeys = ["id","name","typ","ort","datum","beschreibung","website"];
+      for (var k in h) { if (flatKeys.indexOf(k) === -1) extra[k] = h[k]; }
+      return {
+        id: h.id, name: h.name || "", typ: h.typ || "", ort: h.ort || "",
+        datum: h.datum || "", beschreibung: h.beschreibung || "", website: h.website || "",
+        extra_json: JSON.stringify(extra)
+      };
+    });
+    writeRows(getSheet(ss, "Highlights", HIGHLIGHTS_HEADERS), HIGHLIGHTS_HEADERS, hlRows);
+  }
+}
+
+function getSheet(ss, name, headers) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) { sheet = ss.insertSheet(name); sheet.appendRow(headers); }
+  else if (sheet.getLastRow() === 0) { sheet.appendRow(headers); }
+  return sheet;
+}
+
+function readRows(sheet) {
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+  var headers = values[0];
+  var rows = [];
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var empty = row.every(function(c) { return c === "" || c === null; });
+    if (empty) continue;
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) obj[headers[j]] = row[j];
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function writeRows(sheet, headers, rows) {
+  sheet.clearContents();
+  sheet.appendRow(headers);
+  if (rows.length === 0) return;
+  var data = rows.map(function(r) {
+    return headers.map(function(h) { var v = r[h]; return (v === undefined || v === null) ? "" : v; });
+  });
+  sheet.getRange(2, 1, data.length, headers.length).setValues(data);
 }`;
   navigator.clipboard.writeText(code)
     .then(()=>toast("&#9989; Code kopiert!"))
@@ -2860,6 +2995,50 @@ function backupData() {
     toast("&#10006; Sicherung fehlgeschlagen");
   }
 }
+function restoreBackup() {
+  const input = document.getElementById("restoreFile");
+  const file = input.files && input.files[0];
+  if(!file) { toast("&#10006; Bitte zuerst eine Datei auswählen"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch(e) { toast("&#10006; Datei ist kein gültiges JSON"); return; }
+    if(!data || typeof data.seasons !== "object") { toast("&#10006; Datei sieht nicht wie ein HSG-Backup aus"); return; }
+
+    const gamesCount = Object.values(data.seasons||{}).reduce((n,s)=>n+((s&&s.games)?s.games.length:0),0);
+    const hlCount = (data.highlights||[]).length;
+    const plCount = (data.players||[]).length;
+    const voteCount = Object.keys(data.jingleVotes||{}).length;
+    const sure = confirm(
+      "Backup wiederherstellen?\n\n" +
+      gamesCount + " Spiele, " + hlCount + " Highlight(s), " + plCount + " Team-Mitglied(er), " + voteCount + " Jingle-Stimme(n) gefunden.\n\n" +
+      "Das ersetzt den kompletten aktuellen Datenstand (Spielpläne, Highlights, Team, Tor-Jingle-Stimmen) unwiderruflich. Fortfahren?"
+    );
+    if(!sure) return;
+
+    STATE.seasons = data.seasons;
+    STATE.highlights = ensureHighlightIds(data.highlights || []);
+    STATE.players = data.players || [];
+    STATE.jingleVotes = data.jingleVotes || {};
+    STATE._deletedPlayerIds = [];
+    STATE._deletedHighlightIds = [];
+    normalizeSeasons();
+    input.value = "";
+
+    // Alle Bereiche als geändert markieren: die Datei ist bewusst die neue
+    // Wahrheit und soll den (fehlerhaften) Sheet-Stand komplett ersetzen,
+    // nicht mit ihm gemergt werden.
+    saveAll(["seasons","highlights","players","jingleVotes"]).then(ok => {
+      toast(ok ? "&#9989; Backup wiederhergestellt" : "&#9651; Wiederhergestellt, aber Sheet-Sync fehlgeschlagen");
+      renderEnter();
+      renderActive();
+    });
+  };
+  reader.onerror = () => toast("&#10006; Datei konnte nicht gelesen werden");
+  reader.readAsText(file);
+}
+
 let toastTimer;
 function toast(msg) {
   const t=document.getElementById("toast"); t.innerHTML=msg; t.classList.add("show");
