@@ -299,7 +299,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--white);margin-bottom:14px">&#11088; Highlight bearbeiten</div>
     <div id="hlModalContent"></div>
     <button class="btn btn-p" onclick="saveHighlight()">Speichern</button>
-    <button class="btn btn-d" onclick="closeModal('hlModal')">Abbrechen</button>
+    <button class="btn btn-d" onclick="STATE.hlEditId=null;closeModal('hlModal')">Abbrechen</button>
   </div>
 </div>
 
@@ -391,6 +391,7 @@ const JINGLES = [
 
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
 const ARNHEM_CUP = {
+  id:"hl-arnhem-handball-cup-2026",
   name:"Arnhem Handball Cup 2026", typ:"turnier", ort:"Arnhem (Arnheim; NL)",
   datum:"2026-04-04", beschreibung:"Arnheim Handball Cup vom 04.04.-05.04.2026",
   website:"https://www.arnhem-cup.nl/de", games:[], fotos:[
@@ -689,6 +690,26 @@ function mergeGamesById(freshGames, localGames) {
   return Array.from(byId.values());
 }
 
+// Highlights aus dem Sheet oder aus alten lokalen Caches können ein fehlendes
+// id-Feld haben (Feature kam später dazu). Die id wird deterministisch aus
+// dem Namen abgeleitet, damit zwei Geräte für "denselben" Datensatz dieselbe
+// id ermitteln — sonst würde der Merge unten ihn fälschlich als zwei
+// getrennte Datensätze behandeln.
+function slugify(s) {
+  return (s||"").trim().toLowerCase()
+    .replace(/[äöüß]/g, c=>({ä:"ae",ö:"oe",ü:"ue",ß:"ss"}[c]||c))
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function ensureHighlightIds(list) {
+  (list||[]).forEach(h => { if(!h.id) h.id = "hl-" + (slugify(h.name) || Date.now()); });
+  return list||[];
+}
+function mergeHighlightsById(freshHighlights, localHighlights) {
+  const byId = new Map(ensureHighlightIds(freshHighlights).map(h => [h.id, h]));
+  ensureHighlightIds(localHighlights).forEach(h => byId.set(h.id, h));
+  return Array.from(byId.values());
+}
+
 // Speichert nur die Bereiche, die diese Aktion tatsächlich geändert hat — alle
 // anderen Bereiche werden unmittelbar vor dem Schreiben frisch vom Sheet
 // übernommen. Ohne das würde ein Tab mit veraltetem Datenstand (z.B. offen
@@ -726,7 +747,20 @@ async function saveAll(dirtySections) {
       STATE.seasons = freshSeasons && Object.keys(freshSeasons).length ? freshSeasons : STATE.seasons;
     }
 
-    if (!dirty.has("highlights")) STATE.highlights = fresh.highlights || STATE.highlights;
+    // Highlights anhand ihrer id mergen (analog zu Spielen/Spielern) —
+    // vorher wurde bei einer Highlight-Änderung das komplette lokale Array
+    // geschrieben, was einen zwischenzeitlich woanders angelegten Datensatz
+    // (z.B. ein neues Turnier) gelöscht hat, wenn dieses Gerät ihn noch nicht
+    // kannte. Gelöschte Highlights (STATE._deletedHighlightIds) bleiben
+    // ausgeschlossen, bis der Löschvorgang nachweislich angekommen ist.
+    const freshHighlights = ensureHighlightIds(fresh.highlights || []);
+    const deletedHlIds = STATE._deletedHighlightIds || [];
+    if (dirty.has("highlights")) {
+      STATE.highlights = mergeHighlightsById(freshHighlights, STATE.highlights)
+        .filter(h => !deletedHlIds.includes(h.id));
+    } else {
+      STATE.highlights = freshHighlights.filter(h => !deletedHlIds.includes(h.id));
+    }
 
     // Spieler anhand ihrer id mergen, damit gleichzeitig auf einem anderen
     // Gerät angelegte/bearbeitete Spieler erhalten bleiben. Gelöschte Spieler
@@ -758,6 +792,7 @@ async function saveAll(dirtySections) {
     jingleVotes: STATE.jingleVotes,
   });
   if (ok && dirty.has("players")) STATE._deletedPlayerIds = [];
+  if (ok && dirty.has("highlights")) STATE._deletedHighlightIds = [];
   if(ok) {
     setBanner("&#9679; Google Sheets verbunden", true);
   } else {
@@ -1844,7 +1879,13 @@ function editHighlight(idx) {
 }
 function deleteHighlight(idx) {
   if(!confirm("Highlight wirklich löschen?")) return;
+  const removed = STATE.highlights[idx];
   STATE.highlights.splice(idx,1);
+  if(removed) {
+    ensureHighlightIds([removed]);
+    STATE._deletedHighlightIds = STATE._deletedHighlightIds || [];
+    STATE._deletedHighlightIds.push(removed.id);
+  }
   saveAll("highlights").then(()=>{ toast("&#128465; Gelöscht"); renderHighlights(); });
 }
 function showHLModal(hl) {
@@ -1915,6 +1956,7 @@ function convertDriveUrl(url) {
 
 function saveHighlight() {
   const hl = STATE.hlEditId !== null ? STATE.highlights[STATE.hlEditId] : {};
+  if(!hl.id) hl.id = "hl-" + Date.now();
   hl.name  = document.getElementById("hlName").value.trim();
   hl.typ   = document.getElementById("hlTyp").value;
   hl.ort   = document.getElementById("hlOrt").value.trim();
@@ -2778,7 +2820,13 @@ function renderImpressum() {
 // MODAL & PIN & TOAST
 // ═══════════════════════════════════════
 function openModal(id) { document.getElementById(id).classList.add("open"); }
-function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+  // hlEditId zurücksetzen, sobald das Highlight-Modal schließt (auch nach
+  // erfolgreichem Speichern) — sonst hält adminMidEdit() den automatischen
+  // Hintergrund-Sync für den Rest der Sitzung fälschlich für pausiert.
+  if(id === "hlModal") STATE.hlEditId = null;
+}
 function openPin() { document.getElementById("pinInput").value=""; document.getElementById("pinErr").style.display="none"; openModal("pinModal"); }
 function checkPin() {
   if(document.getElementById("pinInput").value===ADMIN_PIN) {
@@ -2835,11 +2883,14 @@ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 // START
 // ═══════════════════════════════════════
 // Verhindert, dass ein automatischer Hintergrund-Sync eine gerade offene,
-// noch nicht gespeicherte Eingabe im Admin-Bereich überschreibt (Spiel- oder
-// Spieler-Formular wird direkt in #view-enter gerendert, ein Refresh würde
-// es sonst mitten in der Eingabe zurücksetzen).
+// noch nicht gespeicherte Eingabe überschreibt: Spiel-/Spieler-Formular
+// (direkt in #view-enter gerendert) oder das offene Highlight-Modal
+// (STATE.hlEditId bleibt gesetzt, solange das Modal offen ist — siehe
+// closeModal()). Ohne diesen Schutz würde ein Refresh die Eingabe mitten im
+// Tippen zurücksetzen bzw. beim Highlight-Modal STATE.highlights unter der
+// Haube austauschen, während STATE.hlEditId noch auf den alten Index zeigt.
 function adminMidEdit() {
-  return STATE.activeTab === "enter" && (STATE.editId !== null || STATE.editPlayerId !== null);
+  return STATE.editId !== null || STATE.editPlayerId !== null || STATE.hlEditId !== null;
 }
 
 window.addEventListener("load", () => {
