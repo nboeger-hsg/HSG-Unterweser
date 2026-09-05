@@ -329,7 +329,12 @@ const FOTOS = {
     .map(n => `fotos/2025-26/foto_${n}.jpg`),
   "2026-27": [], // Fotos folgen separat
 };
+// Externe Fotoalben (z.B. Google Drive/Fotos) je Saison, zusätzlich zu FOTOS.
+const FOTO_ALBEN = {
+  "2026-27": ["https://drive.google.com/drive/folders/1HI67U18NQUuR9bllCQPR0GEvMzlBQbSz"],
+};
 function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
+function fotoAlbenListe() { return FOTO_ALBEN[STATE.activeSeason] || []; }
 /* ═══════════════════════════════════════════════════════════════
    ANLEITUNG · SONGS VERWALTEN
    ───────────────────────────────────────────────────────────────
@@ -2056,6 +2061,7 @@ let lbIndex = 0;
 function renderFotos() {
   const el = document.getElementById("view-fotos");
   const liste = fotosListe();
+  const alben = fotoAlbenListe();
   const sName = STATE.seasons[STATE.activeSeason]?.name || "";
   let grid = liste.map((path,i) =>
     `<div class="foto-thumb loading" onclick="lbOpenList(fotosListe(),${i})">
@@ -2063,14 +2069,29 @@ function renderFotos() {
            onload="this.parentNode.classList.remove('loading')"
            onerror="this.parentNode.style.display='none'" alt="Foto ${i+1}"/>
     </div>`).join("");
+  const albumBtn = alben.map((url, ai) => `
+     <a href="${url}" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.10);
+               border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:12px 16px;
+               text-decoration:none;margin:0 16px 10px">
+       <span style="font-size:22px">&#128247;</span>
+       <div>
+         <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--green)">
+           Album öffnen${alben.length>1?" "+(ai+1):""}
+         </div>
+         <div style="font-size:10px;color:var(--muted);margin-top:1px">Google Drive · alle Fotos dieser Saison</div>
+       </div>
+       <span style="margin-left:auto;font-size:16px;color:var(--green)">&#8599;</span>
+     </a>`).join("");
   el.innerHTML = `
     <div class="pad" style="padding-bottom:6px">
       <div class="shdr" style="margin-top:0">&#128247; Teamfotos · HSG Unterweser CII</div>
       <div style="font-size:11px;color:var(--muted)">${liste.length} Fotos · Tippe zum Vergrößern · ${sName}</div>
     </div>
+    ${albumBtn}
     ${liste.length
       ? `<div class="foto-grid">${grid}</div>`
-      : `<div style="padding:30px 16px;text-align:center;color:var(--muted);font-size:13px">Noch keine Fotos für diese Saison hinterlegt.</div>`}
+      : (alben.length ? "" : `<div style="padding:30px 16px;text-align:center;color:var(--muted);font-size:13px">Noch keine Fotos für diese Saison hinterlegt.</div>`)}
     <div style="padding:16px;text-align:center;font-size:11px;color:var(--muted)">
       &#169; Alle Rechte vorbehalten · Nur zur internen Nutzung
     </div>`;
