@@ -2834,9 +2834,26 @@ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 // ═══════════════════════════════════════
 // START
 // ═══════════════════════════════════════
+// Verhindert, dass ein automatischer Hintergrund-Sync eine gerade offene,
+// noch nicht gespeicherte Eingabe im Admin-Bereich überschreibt (Spiel- oder
+// Spieler-Formular wird direkt in #view-enter gerendert, ein Refresh würde
+// es sonst mitten in der Eingabe zurücksetzen).
+function adminMidEdit() {
+  return STATE.activeTab === "enter" && (STATE.editId !== null || STATE.editPlayerId !== null);
+}
+
 window.addEventListener("load", () => {
   syncAll();
-  setInterval(()=>{ if(STATE.activeTab==="overview") renderOverview(); }, 60000);
+  // Regelmäßiger Hintergrund-Sync: ohne das bleibt ein länger offener Tab
+  // (Browser-Tab seit Stunden offen, App-Icon im Hintergrund) auf dem Stand
+  // seines letzten Ladens stehen — jede Änderung, die zwischenzeitlich auf
+  // einem anderen Gerät gespeichert wurde, bliebe für diesen Tab unsichtbar.
+  setInterval(()=>{ if(!adminMidEdit()) syncAll(); }, 60000);
+  // Beim Zurückkehren aus dem Hintergrund (Handy-App-Wechsel) sofort neu
+  // synchronisieren, statt bis zu 60 Sekunden auf das Intervall zu warten.
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible" && !adminMidEdit()) syncAll();
+  });
 });
 </script>
 </body>
