@@ -2490,6 +2490,11 @@ function renderEnter() {
   <div class="card">
     <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Team) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
     <button class="btn btn-g btn-sm" onclick="backupData()">&#128190; Daten jetzt sichern</button>
+  </div>
+  <div class="card" style="border-color:rgba(240,165,0,.3)">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Spielt eine zuvor gesicherte <code>hsg_backup_&lt;Datum&gt;.json</code> zurück. <strong style="color:var(--amber2)">Achtung:</strong> Ersetzt Spielpläne, Highlights, Team und Tor-Jingle-Stimmen vollständig durch den Inhalt der Datei — nur nutzen, um Daten nach einem Verlust wiederherzustellen.</div>
+    <input type="file" id="restoreFile" accept="application/json,.json" style="margin-bottom:8px"/>
+    <button class="btn btn-d btn-sm" onclick="restoreBackup()">&#9888; Backup wiederherstellen</button>
   </div>`;
 
   // Apps Script
@@ -2860,6 +2865,50 @@ function backupData() {
     toast("&#10006; Sicherung fehlgeschlagen");
   }
 }
+function restoreBackup() {
+  const input = document.getElementById("restoreFile");
+  const file = input.files && input.files[0];
+  if(!file) { toast("&#10006; Bitte zuerst eine Datei auswählen"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch(e) { toast("&#10006; Datei ist kein gültiges JSON"); return; }
+    if(!data || typeof data.seasons !== "object") { toast("&#10006; Datei sieht nicht wie ein HSG-Backup aus"); return; }
+
+    const gamesCount = Object.values(data.seasons||{}).reduce((n,s)=>n+((s&&s.games)?s.games.length:0),0);
+    const hlCount = (data.highlights||[]).length;
+    const plCount = (data.players||[]).length;
+    const voteCount = Object.keys(data.jingleVotes||{}).length;
+    const sure = confirm(
+      "Backup wiederherstellen?\n\n" +
+      gamesCount + " Spiele, " + hlCount + " Highlight(s), " + plCount + " Team-Mitglied(er), " + voteCount + " Jingle-Stimme(n) gefunden.\n\n" +
+      "Das ersetzt den kompletten aktuellen Datenstand (Spielpläne, Highlights, Team, Tor-Jingle-Stimmen) unwiderruflich. Fortfahren?"
+    );
+    if(!sure) return;
+
+    STATE.seasons = data.seasons;
+    STATE.highlights = ensureHighlightIds(data.highlights || []);
+    STATE.players = data.players || [];
+    STATE.jingleVotes = data.jingleVotes || {};
+    STATE._deletedPlayerIds = [];
+    STATE._deletedHighlightIds = [];
+    normalizeSeasons();
+    input.value = "";
+
+    // Alle Bereiche als geändert markieren: die Datei ist bewusst die neue
+    // Wahrheit und soll den (fehlerhaften) Sheet-Stand komplett ersetzen,
+    // nicht mit ihm gemergt werden.
+    saveAll(["seasons","highlights","players","jingleVotes"]).then(ok => {
+      toast(ok ? "&#9989; Backup wiederhergestellt" : "&#9651; Wiederhergestellt, aber Sheet-Sync fehlgeschlagen");
+      renderEnter();
+      renderActive();
+    });
+  };
+  reader.onerror = () => toast("&#10006; Datei konnte nicht gelesen werden");
+  reader.readAsText(file);
+}
+
 let toastTimer;
 function toast(msg) {
   const t=document.getElementById("toast"); t.innerHTML=msg; t.classList.add("show");
