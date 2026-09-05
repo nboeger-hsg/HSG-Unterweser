@@ -586,13 +586,25 @@ function normalizeSeasons() {
   return seeded;
 }
 
+// Prüft, ob im Sheet irgendwo echte Daten stehen (nicht nur 2025/26-Spiele —
+// sonst würde z.B. ein Sheet mit ausschließlich Kader- oder Highlight-Daten
+// fälschlich als "leer" behandelt und der Wiederherstellungs-Zweig in
+// syncAll() könnte einen veralteten lokalen Cache über echte Sheet-Daten
+// schreiben).
+function sheetHasData(d) {
+  const seasons = (d && d.seasons) || {};
+  const hasGames = Object.values(seasons).some(s => s && s.games && s.games.length > 0);
+  const hasHighlights = !!(d && d.highlights && d.highlights.length > 0);
+  const hasPlayers = !!(d && d.players && d.players.length > 0);
+  return hasGames || hasHighlights || hasPlayers;
+}
+
 async function syncAll() {
   setBanner("Verbinde mit Google Sheets...", false);
   const data = await gsReadJSONP();
 
-  if (data && data.seasons && data.seasons["2025-26"] &&
-      data.seasons["2025-26"].games && data.seasons["2025-26"].games.length > 0) {
-    // ✅ Sheet hat Saison-Daten → übernehmen
+  if (data && data.seasons && sheetHasData(data)) {
+    // ✅ Sheet hat Daten → übernehmen
     STATE.seasons    = data.seasons;
     STATE.highlights = data.highlights || [];
     STATE.players    = data.players || [];
@@ -630,8 +642,7 @@ async function syncAll() {
   } else if (data && data.seasons) {
     // Sheet erreichbar aber leer → einmalig Initialdaten einspielen (nur beim ersten Mal)
     const cached = LS.get("hsg_v7");
-    if (cached && cached.seasons && cached.seasons["2025-26"] &&
-        cached.seasons["2025-26"].games && cached.seasons["2025-26"].games.length > 0) {
+    if (cached && cached.seasons && sheetHasData(cached)) {
       // localStorage ist aktueller als leeres Sheet → hochladen
       STATE.seasons    = cached.seasons;
       STATE.highlights = cached.highlights || [];
@@ -672,7 +683,73 @@ async function syncAll() {
   renderActive();
 }
 
-async function saveAll() {
+function mergeGamesById(freshGames, localGames) {
+  const byId = new Map((freshGames||[]).map(g => [g.id, g]));
+  (localGames||[]).forEach(g => byId.set(g.id, g));
+  return Array.from(byId.values());
+}
+
+// Speichert nur die Bereiche, die diese Aktion tatsächlich geändert hat — alle
+// anderen Bereiche werden unmittelbar vor dem Schreiben frisch vom Sheet
+// übernommen. Ohne das würde ein Tab mit veraltetem Datenstand (z.B. offen
+// seit vor einer Kader- oder Highlight-Änderung auf einem anderen Gerät) bei
+// jedem Speichern versehentlich neuere Daten überschreiben, die er selbst nie
+// geladen hat — genau das Symptom "Kader/Spielstände plötzlich wieder weg".
+// dirtySections: "seasons" | "highlights" | "players" | "jingleVotes" |
+// "jingleVotesReset" (Sonderfall für "alle Stimmen zurücksetzen") — als
+// String oder Array. Ohne Angabe werden (wie bisher) alle Bereiche als
+// geändert behandelt.
+async function saveAll(dirtySections) {
+  const dirty = new Set(dirtySections
+    ? (Array.isArray(dirtySections) ? dirtySections : [dirtySections])
+    : ["seasons","highlights","players","jingleVotes"]);
+
+  const fresh = await gsReadJSONP();
+  if (fresh) {
+    // Saisons: pro Saison die Spiele anhand ihrer id mergen (id bleibt über
+    // Geräte hinweg stabil), damit neu eingetragene Ergebnisse nicht von
+    // einem anderen, zeitgleich speichernden Gerät verschluckt werden und
+    // umgekehrt.
+    const freshSeasons = fresh.seasons || {};
+    if (dirty.has("seasons")) {
+      const merged = {};
+      Object.keys(STATE.seasons).forEach(sid => {
+        const local = STATE.seasons[sid];
+        const remote = freshSeasons[sid];
+        merged[sid] = remote
+          ? { ...remote, games: mergeGamesById(remote.games, local.games), rank: local.rank, nuliga: local.nuliga }
+          : local;
+      });
+      Object.keys(freshSeasons).forEach(sid => { if(!merged[sid]) merged[sid] = freshSeasons[sid]; });
+      STATE.seasons = merged;
+    } else {
+      STATE.seasons = freshSeasons && Object.keys(freshSeasons).length ? freshSeasons : STATE.seasons;
+    }
+
+    if (!dirty.has("highlights")) STATE.highlights = fresh.highlights || STATE.highlights;
+
+    // Spieler anhand ihrer id mergen, damit gleichzeitig auf einem anderen
+    // Gerät angelegte/bearbeitete Spieler erhalten bleiben. Gelöschte Spieler
+    // (STATE._deletedPlayerIds) bleiben ausgeschlossen, bis der Löschvorgang
+    // nachweislich auf dem Sheet angekommen ist.
+    const freshPlayers = fresh.players || [];
+    const deletedIds = STATE._deletedPlayerIds || [];
+    if (dirty.has("players")) {
+      const byId = new Map(freshPlayers.filter(p=>!deletedIds.includes(p.id)).map(p => [p.id, p]));
+      (STATE.players||[]).forEach(p => byId.set(p.id, p));
+      STATE.players = Array.from(byId.values());
+    } else {
+      STATE.players = freshPlayers.filter(p=>!deletedIds.includes(p.id));
+    }
+
+    // Tor-Jingle-Stimmen sind bereits pro Spieler-id ein Objekt — Merge ist
+    // hier verlustfrei möglich, außer beim expliziten Zurücksetzen.
+    const freshVotes = fresh.jingleVotes || {};
+    STATE.jingleVotes = dirty.has("jingleVotesReset") ? {}
+      : dirty.has("jingleVotes") ? { ...freshVotes, ...STATE.jingleVotes }
+      : freshVotes;
+  }
+
   LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
   const ok = await gsWrite({
     seasons: STATE.seasons,
@@ -680,6 +757,7 @@ async function saveAll() {
     players: STATE.players,
     jingleVotes: STATE.jingleVotes,
   });
+  if (ok && dirty.has("players")) STATE._deletedPlayerIds = [];
   if(ok) {
     setBanner("&#9679; Google Sheets verbunden", true);
   } else {
@@ -1162,7 +1240,7 @@ function bracketAusCodeLaden(hlIdx) {
   // Nur das bracket überschreiben, games/fotos/platzierung bleiben erhalten
   hl.bracket = JSON.parse(JSON.stringify(ARNHEM_CUP.bracket));
   LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
-  saveAll().then(ok => {
+  saveAll("highlights").then(ok => {
     toast(ok ? "&#9989; Bracket aktualisiert und gespeichert" : "&#9651; Bracket lokal aktualisiert");
     renderHighlights();
   });
@@ -1225,7 +1303,7 @@ function bereinigeDuplikate(hlIdx) {
     : "Keine Duplikate. " + nachher + " Spiele, alle eindeutig.");
 
   // Dann asynchron ins Sheet schreiben
-  saveAll().then(ok => {
+  saveAll("highlights").then(ok => {
     toast(ok
       ? "&#9989; Gespeichert: " + nachher + " Spiele"
       : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen");
@@ -1363,7 +1441,7 @@ function saveTorschuetzen(hlIdx) {
   LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
   hlTab(hlIdx, "torjaeger"); // Sofort aktualisieren
   toast("&#9989; Torschützen gespeichert — wird synchronisiert...");
-  saveAll().then(ok => toast(ok ? "&#9989; Gespeichert" : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen"));
+  saveAll("highlights").then(ok => toast(ok ? "&#9989; Gespeichert" : "&#9651; Lokal ok, Sheet-Sync fehlgeschlagen"));
 }
 
 function renderHLPlatzierung(hl, idx) {
@@ -1421,7 +1499,7 @@ function savePlatzierung(hlIdx) {
     if(team) result.push({team, info});
   }
   hl.platzierung = result;
-  saveAll().then(() => {
+  saveAll("highlights").then(() => {
     toast("&#9989; Abschlusstabelle gespeichert");
     hlTab(hlIdx, "platzierung");
   });
@@ -1669,7 +1747,7 @@ function saveBracket() {
   hl.bracket.rounds = rounds;
 
   document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHighlight;
-  saveAll().then(() => {
+  saveAll("highlights").then(() => {
     toast("&#9989; Turnierbaum gespeichert");
     closeModal("hlModal");
     renderHighlights();
@@ -1767,7 +1845,7 @@ function editHighlight(idx) {
 function deleteHighlight(idx) {
   if(!confirm("Highlight wirklich löschen?")) return;
   STATE.highlights.splice(idx,1);
-  saveAll().then(()=>{ toast("&#128465; Gelöscht"); renderHighlights(); });
+  saveAll("highlights").then(()=>{ toast("&#128465; Gelöscht"); renderHighlights(); });
 }
 function showHLModal(hl) {
   const fotoListe = (hl.fotos||[]).join("\n");
@@ -1858,7 +1936,7 @@ function saveHighlight() {
   hl.fotos = rohe;
 
   if(STATE.hlEditId === null) STATE.highlights.push(hl);
-  saveAll().then(() => {
+  saveAll("highlights").then(() => {
     toast("&#9989; Highlight gespeichert");
     closeModal("hlModal");
     renderHighlights();
@@ -1924,7 +2002,7 @@ function saveHLGame() {
   if(hlGameEditIdx!==null) hl.games[hlGameEditIdx]=g;
   else hl.games.push(g);
   document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHighlight;
-  saveAll().then(()=>{ toast("&#9989; Spiel gespeichert"); closeModal("hlModal"); renderHighlights(); });
+  saveAll("highlights").then(()=>{ toast("&#9989; Spiel gespeichert"); closeModal("hlModal"); renderHighlights(); });
 }
 
 // ═══════════════════════════════════════
@@ -2131,7 +2209,7 @@ function saveGruppenEingabe() {
   });
 
   document.getElementById("hlModal").querySelector(".btn-p").onclick = saveHighlight;
-  saveAll().then(() => {
+  saveAll("highlights").then(() => {
     toast("&#9989; Gruppenspiele gespeichert");
     closeModal("hlModal");
     renderHighlights();
@@ -2269,14 +2347,14 @@ function castJingleVote(jingleId) {
   STATE.jingleVotes[voterId] = {jingleId, ts: Date.now()};
   try { localStorage.setItem("hsg_jingleVoterId", voterId); } catch(e) {}
   renderSongs(); // sofortige Anzeige der eigenen Stimme, nicht erst nach dem Sheets-Roundtrip
-  saveAll().then(ok => { if(!ok) toast("&#9651; Lokal gespeichert"); });
+  saveAll("jingleVotes").then(ok => { if(!ok) toast("&#9651; Lokal gespeichert"); });
 }
 
 function resetJingleVotes() {
   if(!confirm("Wirklich alle Stimmen zurücksetzen?")) return;
   STATE.jingleVotes = {};
   renderSongs();
-  saveAll().then(ok => { toast(ok?"&#9989; Zurückgesetzt":"&#9651; Lokal gespeichert"); });
+  saveAll("jingleVotesReset").then(ok => { toast(ok?"&#9989; Zurückgesetzt":"&#9651; Lokal gespeichert"); });
 }
 
 // ═══════════════════════════════════════
@@ -2493,14 +2571,16 @@ function savePlayer() {
   p.lieblingstier = document.getElementById("pTier").value.trim();
   p.lieblingsessen = document.getElementById("pEssen").value.trim();
   STATE.editPlayerId = null;
-  saveAll().then(ok => { toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert"); renderEnter(); });
+  saveAll("players").then(ok => { toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert"); renderEnter(); });
 }
 
 function deletePlayer(id) {
   if(!confirm("Spieler wirklich löschen?")) return;
   STATE.players = (STATE.players||[]).filter(p=>p.id!==id);
+  STATE._deletedPlayerIds = STATE._deletedPlayerIds || [];
+  STATE._deletedPlayerIds.push(id);
   STATE.editPlayerId = null;
-  saveAll().then(ok => { toast(ok?"&#9989; Gelöscht":"&#9651; Lokal gespeichert"); renderEnter(); });
+  saveAll("players").then(ok => { toast(ok?"&#9989; Gelöscht":"&#9651; Lokal gespeichert"); renderEnter(); });
 }
 
 function saveGame() {
@@ -2522,7 +2602,7 @@ function saveGame() {
   g.note   = document.getElementById("eNote").value.trim();
   g.pdf    = document.getElementById("ePdf").value.trim();
   STATE.editId = null;
-  saveAll().then(ok => {
+  saveAll("seasons").then(ok => {
     toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert");
     renderEnter();
   });
@@ -2531,7 +2611,7 @@ function saveGame() {
 function saveRank() {
   const v = parseInt(document.getElementById("rankInput").value);
   if(!isNaN(v)) STATE.seasons[STATE.activeSeason].rank = v;
-  saveAll().then(ok => toast(ok?"&#9989; Tabellenplatz gespeichert":"&#9651; Lokal gespeichert"));
+  saveAll("seasons").then(ok => toast(ok?"&#9989; Tabellenplatz gespeichert":"&#9651; Lokal gespeichert"));
 }
 
 function addNewGame() {
