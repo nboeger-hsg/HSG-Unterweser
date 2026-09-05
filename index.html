@@ -329,9 +329,13 @@ const FOTOS = {
     .map(n => `fotos/2025-26/foto_${n}.jpg`),
   "2026-27": [], // Fotos folgen separat
 };
-// Externe Fotoalben (z.B. Google Drive/Fotos) je Saison, zusätzlich zu FOTOS.
+// Externe Fotoalben (Google Fotos) je Saison, zusätzlich zu FOTOS. Jedes Album
+// hat ein eigenes Label (z.B. "Spieltag 1"), das im "Album öffnen"-Button erscheint.
 const FOTO_ALBEN = {
-  "2026-27": ["https://drive.google.com/drive/folders/1HI67U18NQUuR9bllCQPR0GEvMzlBQbSz"],
+  "2026-27": [
+    { label: "Spieltag 1", url: "https://photos.app.goo.gl/T3XdxpYEGF2cCdcSA" },
+    { label: "Mannschaft", url: "https://photos.app.goo.gl/KoJ8LQ6ig13rncDo6" },
+  ],
 };
 function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
 function fotoAlbenListe() { return FOTO_ALBEN[STATE.activeSeason] || []; }
@@ -2069,17 +2073,17 @@ function renderFotos() {
            onload="this.parentNode.classList.remove('loading')"
            onerror="this.parentNode.style.display='none'" alt="Foto ${i+1}"/>
     </div>`).join("");
-  const albumBtn = alben.map((url, ai) => `
-     <a href="${url}" target="_blank" rel="noopener"
+  const albumBtn = alben.map(a => `
+     <a href="${a.url}" target="_blank" rel="noopener"
         style="display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.10);
                border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:12px 16px;
                text-decoration:none;margin:0 16px 10px">
        <span style="font-size:22px">&#128247;</span>
        <div>
          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--green)">
-           Album öffnen${alben.length>1?" "+(ai+1):""}
+           Album öffnen &middot; ${a.label}
          </div>
-         <div style="font-size:10px;color:var(--muted);margin-top:1px">Google Drive · alle Fotos dieser Saison</div>
+         <div style="font-size:10px;color:var(--muted);margin-top:1px">Google Fotos</div>
        </div>
        <span style="margin-left:auto;font-size:16px;color:var(--green)">&#8599;</span>
      </a>`).join("");
