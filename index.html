@@ -246,7 +246,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div class="tab on" onclick="showTab('overview',this)"><span class="ti">&#128203;</span>Übersicht</div>
     <div class="tab" onclick="showTab('saison',this)"><span class="ti">&#128202;</span>Saison</div>
     <div class="tab" onclick="showTab('torjaeger',this)"><span class="ti">&#9917;</span>Torjäger</div>
-    <div class="tab" onclick="showTab('spieler',this)"><span class="ti"><img src="icon.png" class="nav-ic" alt=""/></span>Kader</div>
+    <div class="tab" onclick="showTab('spieler',this)"><span class="ti"><img src="icon.png" class="nav-ic" alt=""/></span>Team</div>
     <div class="tab" onclick="showTab('spielplan',this)"><span class="ti">&#128197;</span>Spielplan</div>
     <div class="tab" onclick="showTab('highlights',this)"><span class="ti">&#11088;</span>Highlights</div>
     <div class="tab" onclick="showTab('fotos',this)"><span class="ti">&#128247;</span>Fotos</div>
@@ -1062,7 +1062,7 @@ function renderSpieler() {
     return na-nb;
   });
   const staff = alle.filter(istBetreuerstab).sort((a,b)=>(a.vorname||"").localeCompare(b.vorname||""));
-  let h = `<div class="shdr" style="margin-top:0">&#127183; Kader · Sammelalbum</div>`;
+  let h = `<div class="shdr" style="margin-top:0">&#127183; Team · Sammelalbum</div>`;
   if(!players.length) {
     h += `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Noch keine Spieler erfasst.${STATE.isAdmin?' Im Admin-Bereich anlegen.':''}</div>`;
   } else {
@@ -2281,7 +2281,7 @@ function jingleTally() {
 function renderJinglesHTML() {
   const players = (STATE.players||[]).filter(p=>!istBetreuerstab(p));
   if(!players.length) {
-    return `<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center">Noch kein Kader erfasst — Abstimmung ist erst möglich, wenn Spieler im Kader angelegt sind.</div>`;
+    return `<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center">Noch kein Team erfasst — Abstimmung ist erst möglich, wenn Spieler im Team angelegt sind.</div>`;
   }
   let lastId = "";
   try { lastId = localStorage.getItem("hsg_jingleVoterId") || ""; } catch(e) {}
@@ -2414,7 +2414,7 @@ function renderEnter() {
     h += `<button class="btn btn-d" onclick="deletePlayer('${editPlayer.id}')">&#128465; Spieler löschen</button>`;
     h += `<button class="btn btn-d" onclick="STATE.editPlayerId=null;renderEnter()">&#10006; Abbrechen</button>`;
   } else {
-    h += `<div class="shdr">Kader verwalten</div>`;
+    h += `<div class="shdr">Team verwalten</div>`;
     const players = (STATE.players||[]).slice().sort((a,b)=>{
       const na = a.nummer==null||a.nummer===""?999:parseInt(a.nummer);
       const nb = b.nummer==null||b.nummer===""?999:parseInt(b.nummer);
@@ -2433,7 +2433,7 @@ function renderEnter() {
         </div>`;
       });
     }
-    h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPlayer()">&#43; Person zum Kader hinzufügen</button>`;
+    h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPlayer()">&#43; Person zum Team hinzufügen</button>`;
   }
 
   // Neue Saison 2026/27 Spiele
@@ -2446,7 +2446,7 @@ function renderEnter() {
   // Datensicherung
   h += `<div class="shdr">Datensicherung</div>
   <div class="card">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Kader) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Team) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
     <button class="btn btn-g btn-sm" onclick="backupData()">&#128190; Daten jetzt sichern</button>
   </div>`;
 
@@ -2705,7 +2705,7 @@ function renderImpressum() {
       <div style="font-size:28px;flex-shrink:0">&#128106;</div>
       <div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:4px">Hinweis zur Erfassung von Spieler- und Fotodaten</div>
-        <div style="font-size:12px;color:var(--text);line-height:1.7">In dieser App werden <strong style="color:var(--white)">Vornamen von Nachwuchsspielern</strong> zusammen mit Spielstatistiken erfasst. Im Sammelalbum (Kader) werden zusätzlich <strong style="color:var(--white)">Trikotnummer, Position und Geburtsdatum (TT.MM., ohne Jahr)</strong> hinterlegt. Zusätzlich sind <strong style="color:var(--white)">Teamfotos und Fotos der Spieler</strong> einsehbar.</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.7">In dieser App werden <strong style="color:var(--white)">Vornamen von Nachwuchsspielern</strong> zusammen mit Spielstatistiken erfasst. Im Sammelalbum (Team) werden zusätzlich <strong style="color:var(--white)">Trikotnummer, Position und Geburtsdatum (TT.MM., ohne Jahr)</strong> hinterlegt. Zusätzlich sind <strong style="color:var(--white)">Teamfotos und Fotos der Spieler</strong> einsehbar.</div>
       </div>
     </div>
     ${[
@@ -2743,8 +2743,8 @@ function renderImpressum() {
   <div class="card">
     ${[
       {titel:"1. Verantwortliche Person",text:"NBoeger, nboeger.nb@gmail.com. Privatperson, kein Vereinsmitglied, ohne offizielle Funktion."},
-      {titel:"2. Gespeicherte Daten",text:"Spieldaten (Termine, Ergebnisse, Torschützenlisten), Teamfotos und Fotos der Spieler, Highlight-Veranstaltungen, Kaderdaten (Vorname, Trikotnummer, Position, Geburtsdatum im Format TT.MM. ohne Jahresangabe), Abstimmungsdaten zu Tor-Jingles (Spieler-Zuordnung ohne weitere Angaben). Keine personenbezogenen Nutzerdaten."},
-      {titel:"3. Spielerdaten & Fotos",text:"Vornamen in Torschützenlisten und Teamfotos sowie im Sammelalbum (Kader-Übersicht) betreffen Nachwuchsspieler. Das Sammelalbum erfasst zusätzlich Trikotnummer, Position sowie das Geburtsdatum im Format TT.MM. (Tag und Monat, ohne Geburtsjahr). Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse im Sportbetrieb). Widerspruch jederzeit möglich."},
+      {titel:"2. Gespeicherte Daten",text:"Spieldaten (Termine, Ergebnisse, Torschützenlisten), Teamfotos und Fotos der Spieler, Highlight-Veranstaltungen, Teamdaten (Vorname, Trikotnummer, Position, Geburtsdatum im Format TT.MM. ohne Jahresangabe), Abstimmungsdaten zu Tor-Jingles (Spieler-Zuordnung ohne weitere Angaben). Keine personenbezogenen Nutzerdaten."},
+      {titel:"3. Spielerdaten & Fotos",text:"Vornamen in Torschützenlisten und Teamfotos sowie im Sammelalbum (Team-Übersicht) betreffen Nachwuchsspieler. Das Sammelalbum erfasst zusätzlich Trikotnummer, Position sowie das Geburtsdatum im Format TT.MM. (Tag und Monat, ohne Geburtsjahr). Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse im Sportbetrieb). Widerspruch jederzeit möglich."},
       {titel:"4. Google Sheets",text:"Spieldaten in Google Sheets (Google Ireland Ltd.). Nur Spieldaten, keine Nutzerinformationen. Datenschutz: policies.google.com/privacy"},
       {titel:"5. Lokaler Speicher",text:"Temporärer Cache via localStorage für Offline-Nutzung. Keine personenbezogenen Daten."},
       {titel:"6. Keine Weitergabe",text:"Daten werden nicht verkauft oder für Werbezwecke genutzt."},
