@@ -206,6 +206,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 .player-name{padding:8px 6px 2px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--white)}
 .player-lastname{padding:0 6px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--muted)}
 .player-pos{text-align:center;font-size:10px;color:var(--blue2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.player-pos.has-sz{text-transform:none}
 .player-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);border-top:1px solid var(--b1)}
 .player-stat{background:var(--bg2);padding:6px 2px;text-align:center}
 .player-stat .v{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--amber)}
@@ -1156,7 +1157,7 @@ function playerCardHTML(p) {
       </div>
       <div class="player-name">${p.vorname||"—"}</div>
       ${p.nachname?`<div class="player-lastname">${p.nachname}</div>`:""}
-      <div class="player-pos">${ALLE_ROLLEN[p.position]||p.position||"—"}</div>
+      <div class="player-pos${/ß/.test(ALLE_ROLLEN[p.position]||"")?" has-sz":""}">${ALLE_ROLLEN[p.position]||p.position||"—"}</div>
       ${stats}
       ${p.geburtstag?`<div class="player-bday">&#127874; ${p.geburtstag}</div>`:""}
       ${extras?`<div class="player-extra">${extras}</div>`:""}
