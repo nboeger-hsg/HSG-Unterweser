@@ -2628,11 +2628,11 @@ function renderEnter() {
     h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPlayer()">&#43; Person zum Team hinzufügen</button>`;
   }
 
-  // Team-Stammdaten-Migration (Nachname/Position einmalig nachtragen)
+  // Team-Stammdaten-Migration (Nachname/Position/Foto einmalig nachtragen)
   h += `<div class="shdr">Team-Stammdaten</div>
   <div class="card">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Trägt Nachname und Position/Funktion für den aktuellen Kader anhand einer festen Liste bekannter Spieler-IDs nach. Bereits individuell gepflegte Werte werden dabei überschrieben.</div>
-    <button class="btn btn-g btn-sm" onclick="migrateTeamStammdaten()">&#128260; Nachname &amp; Position nachtragen</button>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Trägt Nachname, Position/Funktion und Teamfoto für den aktuellen Kader anhand einer festen Liste bekannter Spieler-IDs nach. Bereits individuell gepflegte Werte werden dabei überschrieben.</div>
+    <button class="btn btn-g btn-sm" onclick="migrateTeamStammdaten()">&#128260; Nachname, Position &amp; Foto nachtragen</button>
   </div>`;
 
   // Presse verwalten
@@ -2848,31 +2848,32 @@ function deletePlayer(id) {
 }
 
 // Team-Stammdaten einmalig anhand fester, bekannter Spieler-IDs nachtragen
-// (Nachname + Position/Funktion). Nummer/Paraden bleiben unangetastet.
+// (Nachname + Position/Funktion + Teamfoto). Nummer/Paraden bleiben unangetastet.
 const TEAM_STAMMDATEN = {
-  "p_1788544212147": { nachname: "Osterwohldt", position: "LA" }, // Jonas
-  "p_1788544258119": { nachname: "Hoyer",       position: "RA" }, // Mats
-  "p_1788544288629": { nachname: "Drieling",    position: "RR" }, // Tim
-  "p_1788544332388": { nachname: "Böger",       position: "RL" }, // Max
-  "p_1788544367098": { nachname: "Schulz",      position: "KL" }, // Ben
-  "p_1788544409380": { nachname: "Lede",        position: "LA" }, // Leon
-  "p_1788544445227": { nachname: "Entrich",     position: "RA" }, // Nils
-  "p_1788544479462": { nachname: "Alexander",   position: "RM" }, // Rocket
-  "p_1788544526310": { nachname: "Penshorn",    position: "LA" }, // Jarek
-  "p_1788544585886": { nachname: "Bräunling",   position: "RR" }, // Luca
-  "p_1788544556654": { nachname: "Bräunling",   position: "TW" }, // Finn
-  "p_1788544614191": { nachname: "Meyer",       position: "TW" }, // Dean
-  "p_1788628852532": { nachname: "Drieling",    position: "TR" }, // Tammo
-  "p_1788628901957": { nachname: "Bräuling",    position: "CO" }, // Kevin
+  "p_1788544212147": { nachname: "Osterwohldt", position: "LA", foto: "spieler/jonas.jpg" },  // Jonas
+  "p_1788544258119": { nachname: "Hoyer",       position: "RA", foto: "spieler/mats.jpg" },   // Mats
+  "p_1788544288629": { nachname: "Drieling",    position: "RR", foto: "spieler/tim.jpg" },    // Tim
+  "p_1788544332388": { nachname: "Böger",       position: "RL", foto: "spieler/max.jpg" },    // Max
+  "p_1788544367098": { nachname: "Schulz",      position: "KL", foto: "spieler/ben.jpg" },    // Ben
+  "p_1788544409380": { nachname: "Lede",        position: "LA", foto: "spieler/leon.jpg" },   // Leon
+  "p_1788544445227": { nachname: "Entrich",     position: "RA", foto: "spieler/nils.jpg" },   // Nils
+  "p_1788544479462": { nachname: "Alexander",   position: "RM", foto: "spieler/rocket.jpg" }, // Rocket
+  "p_1788544526310": { nachname: "Penshorn",    position: "LA", foto: "spieler/jarek.jpg" },  // Jarek
+  "p_1788544585886": { nachname: "Bräunling",   position: "RR", foto: "spieler/luca.jpg" },   // Luca
+  "p_1788544556654": { nachname: "Bräunling",   position: "TW", foto: "spieler/finn.jpg" },   // Finn
+  "p_1788544614191": { nachname: "Meyer",       position: "TW", foto: "spieler/dean.jpg" },   // Dean
+  "p_1788628852532": { nachname: "Drieling",    position: "TR", foto: "spieler/tammo.jpg" },  // Tammo
+  "p_1788628901957": { nachname: "Bräuling",    position: "CO", foto: "spieler/kevin.jpg" },  // Kevin
 };
 function migrateTeamStammdaten() {
   const treffer = (STATE.players||[]).filter(p => TEAM_STAMMDATEN[p.id]);
   if(!treffer.length) { toast("&#10006; Keine bekannten Spieler-IDs im aktuellen Kader gefunden"); return; }
-  if(!confirm("Nachname und Position/Funktion für " + treffer.length + " Team-Mitglied(er) nachtragen?")) return;
+  if(!confirm("Nachname, Position/Funktion und Foto für " + treffer.length + " Team-Mitglied(er) nachtragen?")) return;
   treffer.forEach(p => {
     const d = TEAM_STAMMDATEN[p.id];
     p.nachname = d.nachname;
     p.position = d.position;
+    p.fotoUrl = FOTO_BASE + d.foto;
   });
   saveAll("players").then(ok => { toast(ok?"&#9989; Stammdaten aktualisiert":"&#9651; Lokal gespeichert"); renderEnter(); });
 }
