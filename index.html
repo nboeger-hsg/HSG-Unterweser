@@ -204,6 +204,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 .player-photo .ph-ph{width:44%;opacity:.35;filter:grayscale(1)}
 .player-num{position:absolute;top:6px;left:6px;z-index:2;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#1a1200;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 .player-name{padding:8px 6px 2px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--white)}
+.player-lastname{padding:0 6px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--muted)}
 .player-pos{text-align:center;font-size:10px;color:var(--blue2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
 .player-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);border-top:1px solid var(--b1)}
 .player-stat{background:var(--bg2);padding:6px 2px;text-align:center}
@@ -251,6 +252,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div class="tab" onclick="showTab('highlights',this)"><span class="ti">&#11088;</span>Highlights</div>
     <div class="tab" onclick="showTab('fotos',this)"><span class="ti">&#128247;</span>Fotos</div>
     <div class="tab" onclick="showTab('songs',this)"><span class="ti">&#127925;</span>Songs</div>
+    <div class="tab" onclick="showTab('presse',this)"><span class="ti">&#128240;</span>Presse</div>
     <div class="tab" onclick="showTab('enter',this)"><span class="ti">&#9999;</span>Admin</div>
     <div class="tab" onclick="showTab('impressum',this)"><span class="ti">&#8505;</span>Impressum</div>
   </nav>
@@ -264,6 +266,7 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
   <div class="view pad"    id="view-highlights"></div>
   <div class="view"        id="view-fotos"></div>
   <div class="view pad"    id="view-songs"></div>
+  <div class="view pad"    id="view-presse"></div>
   <div class="view pad"    id="view-enter"></div>
   <div class="view pad"    id="view-impressum"></div>
 
@@ -300,6 +303,17 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
     <div id="hlModalContent"></div>
     <button class="btn btn-p" onclick="saveHighlight()">Speichern</button>
     <button class="btn btn-d" onclick="STATE.hlEditId=null;closeModal('hlModal')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- PRESSEARTIKEL-LESER MODAL -->
+<div class="modal-bg" id="presseModal">
+  <div class="modal" style="max-height:92vh;width:min(96vw,720px);padding:0;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b1)">
+      <div id="presseModalTitel" style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--white)"></div>
+      <span class="lb-close" style="position:static" onclick="closeModal('presseModal')">&#10005;</span>
+    </div>
+    <iframe id="presseModalFrame" sandbox="allow-same-origin" style="flex:1;width:100%;min-height:70vh;border:0;background:#fff"></iframe>
   </div>
 </div>
 
@@ -506,6 +520,13 @@ const SEED_2026 = [
   {id:"2627-16289",date:"2027-04-17",time:"14:00",round:"18. Spieltag",isHome:true,teamHome:"HSG Unterweser CII",teamAway:"MSG LeMa HVH",venue:"Stadland-Rodenkirchen, SH",pdf:"",note:""},
 ];
 
+// Presse-Intern-Startbestand: Artikel-Dateien liegen unter presse/intern/ im
+// Repo (per GitHub-Weboberfläche hochladen, analog zu FOTOS/SONGS), hier nur
+// die Metadaten inkl. Zuordnung zum Spiel (gameId) für den Link im Spielplan.
+const PRESSE_INTERN_SEED = [
+  {id:"pi-2627-spieltag1-ritterhude", season:"2026-27", gameId:"2627-16204", titel:"Deutlicher Auftaktsieg: HSG-CII gewinnt 35:20 in Ritterhude", datum:"2026-09-05", datei:"presse/intern/2026-27_spieltag1_ritterhude.html"},
+];
+
 // ════════════════════════════════════════
 // APP STATE
 // ═══════════════════════════════════════
@@ -526,6 +547,11 @@ let STATE = {
   editPlayerId: null,
   songsTab: "teamsongs", // "teamsongs" | "jingles"
   jingleVotes: {}, // { [spielerId]: {jingleId, ts} } — eine Stimme pro Spieler, überschreibbar
+  presseIntern: [], // Array von {id, season, gameId, titel, datum, datei}
+  presseExtern: [], // Array von {id, season, titel, quelle, datum, pdfDatei, link}
+  presseSubTab: "intern", // "intern" | "extern"
+  editPresseInternId: null,
+  editPresseExternId: null,
 };
 
 const LS = {
@@ -582,12 +608,19 @@ function normalizeSeasons() {
   var seeded = false;
   if (!Array.isArray(STATE.players)) STATE.players = [];
   if (!STATE.jingleVotes || typeof STATE.jingleVotes !== "object") STATE.jingleVotes = {};
+  if (!Array.isArray(STATE.presseIntern)) STATE.presseIntern = [];
+  if (!Array.isArray(STATE.presseExtern)) STATE.presseExtern = [];
   if (!STATE.seasons["2025-26"]) STATE.seasons["2025-26"] = { name:"Saison 2025/26", rank:9, games: [], nuliga: NULIGA };
   if (!STATE.seasons["2026-27"]) STATE.seasons["2026-27"] = { name:"Saison 2026/27", rank:7, games: [], nuliga: NULIGA_2627 };
   // 2026/27 einmalig mit Spielplan befuellen, falls leer
   if (!STATE.seasons["2026-27"].games || STATE.seasons["2026-27"].games.length === 0) {
     STATE.seasons["2026-27"].games = JSON.parse(JSON.stringify(SEED_2026));
     if (STATE.seasons["2026-27"].rank == null) STATE.seasons["2026-27"].rank = 7;
+    seeded = true;
+  }
+  // Presse-Intern einmalig mit dem ersten Artikel befuellen, falls leer
+  if (STATE.presseIntern.length === 0) {
+    STATE.presseIntern = JSON.parse(JSON.stringify(PRESSE_INTERN_SEED));
     seeded = true;
   }
   // nuLiga-Objekte immer aus Code-Konstanten setzen (verhindert veraltete/verworfene Links)
@@ -619,6 +652,8 @@ async function syncAll() {
     STATE.highlights = data.highlights || [];
     STATE.players    = data.players || [];
     STATE.jingleVotes = data.jingleVotes || {};
+    STATE.presseIntern = data.presseIntern || [];
+    STATE.presseExtern = data.presseExtern || [];
 
     // Arnhem Cup Bracket aktualisieren wenn Runden-Anzahl nicht stimmt
     const arnIdx = STATE.highlights.findIndex(h => h.name && h.name.includes("Arnhem"));
@@ -645,7 +680,7 @@ async function syncAll() {
       if (_arnChanged) await saveAll();
     }
 
-    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
+    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes, presseIntern: STATE.presseIntern, presseExtern: STATE.presseExtern});
     LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
@@ -658,6 +693,8 @@ async function syncAll() {
       STATE.highlights = cached.highlights || [];
       STATE.players    = cached.players || [];
       STATE.jingleVotes = cached.jingleVotes || {};
+      STATE.presseIntern = cached.presseIntern || [];
+      STATE.presseExtern = cached.presseExtern || [];
       setBanner("&#9679; Stelle Daten wieder her...", false);
       await saveAll();
     } else {
@@ -667,7 +704,7 @@ async function syncAll() {
       STATE.highlights = [JSON.parse(JSON.stringify(ARNHEM_CUP))];
       await saveAll();
     }
-    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
+    LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes, presseIntern: STATE.presseIntern, presseExtern: STATE.presseExtern});
     LS.set("hsg_cachedAt", Date.now());
     setBanner("&#9679; Google Sheets verbunden", true);
 
@@ -679,6 +716,8 @@ async function syncAll() {
       STATE.highlights = cached.highlights || [];
       STATE.players    = cached.players || [];
       STATE.jingleVotes = cached.jingleVotes || {};
+      STATE.presseIntern = cached.presseIntern || [];
+      STATE.presseExtern = cached.presseExtern || [];
       setBanner("&#9651; Offline — lokale Daten" + (function(){var _t=LS.get("hsg_cachedAt");return _t?" &middot; Stand "+fmtTs(_t):"";})(), false);
     } else {
       STATE.seasons["2025-26"].games = SEED_2025;
@@ -688,7 +727,7 @@ async function syncAll() {
     }
   }
   const _seeded26 = normalizeSeasons();
-  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes, presseIntern: STATE.presseIntern, presseExtern: STATE.presseExtern});
   if (_seeded26 && data && data.seasons) { await saveAll(); }
   renderActive();
 }
@@ -732,7 +771,7 @@ function mergeHighlightsById(freshHighlights, localHighlights) {
 async function saveAll(dirtySections) {
   const dirty = new Set(dirtySections
     ? (Array.isArray(dirtySections) ? dirtySections : [dirtySections])
-    : ["seasons","highlights","players","jingleVotes"]);
+    : ["seasons","highlights","players","jingleVotes","presseIntern","presseExtern"]);
 
   const fresh = await gsReadJSONP();
   if (fresh) {
@@ -791,17 +830,38 @@ async function saveAll(dirtySections) {
     STATE.jingleVotes = dirty.has("jingleVotesReset") ? {}
       : dirty.has("jingleVotes") ? { ...freshVotes, ...STATE.jingleVotes }
       : freshVotes;
+
+    // Presseartikel (Intern/Extern) analog zu Spielern/Highlights per id mergen.
+    const freshPI = fresh.presseIntern || [];
+    const deletedPIIds = STATE._deletedPresseInternIds || [];
+    if (dirty.has("presseIntern")) {
+      STATE.presseIntern = mergeGamesById(freshPI, STATE.presseIntern).filter(p => !deletedPIIds.includes(p.id));
+    } else {
+      STATE.presseIntern = freshPI.filter(p => !deletedPIIds.includes(p.id));
+    }
+
+    const freshPE = fresh.presseExtern || [];
+    const deletedPEIds = STATE._deletedPresseExternIds || [];
+    if (dirty.has("presseExtern")) {
+      STATE.presseExtern = mergeGamesById(freshPE, STATE.presseExtern).filter(p => !deletedPEIds.includes(p.id));
+    } else {
+      STATE.presseExtern = freshPE.filter(p => !deletedPEIds.includes(p.id));
+    }
   }
 
-  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes});
+  LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes, presseIntern: STATE.presseIntern, presseExtern: STATE.presseExtern});
   const ok = await gsWrite({
     seasons: STATE.seasons,
     highlights: STATE.highlights,
     players: STATE.players,
     jingleVotes: STATE.jingleVotes,
+    presseIntern: STATE.presseIntern,
+    presseExtern: STATE.presseExtern,
   });
   if (ok && dirty.has("players")) STATE._deletedPlayerIds = [];
   if (ok && dirty.has("highlights")) STATE._deletedHighlightIds = [];
+  if (ok && dirty.has("presseIntern")) STATE._deletedPresseInternIds = [];
+  if (ok && dirty.has("presseExtern")) STATE._deletedPresseExternIds = [];
   if(ok) {
     setBanner("&#9679; Google Sheets verbunden", true);
   } else {
@@ -858,6 +918,7 @@ function renderActive() {
     case "highlights": renderHighlights(); break;
     case "fotos":      renderFotos();      break;
     case "songs":      renderSongs();      break;
+    case "presse":     renderPresse();     break;
     case "enter":      renderEnter();      break;
     case "impressum":  renderImpressum();  break;
   }
@@ -925,6 +986,9 @@ function gameCardHTML(g, showEdit=false) {
     `<button class="btn btn-sm" style="margin-top:8px;width:auto;padding:5px 12px" onclick="startEdit('${g.id}')">&#9998; Bearbeiten</button>` : "";
   const pdfBtn = g.pdf ?
     `<a href="${g.pdf}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--blue2)">&#128196; Spielbericht</a>` : "";
+  const presseArtikel = pressArtikelFuerSpiel(g.id);
+  const presseBtn = presseArtikel ?
+    `<a href="javascript:void(0)" onclick="openPresseArtikel('${presseArtikel.id}')" style="display:inline-block;margin-top:6px;margin-left:12px;font-size:11px;color:var(--blue2)">&#128240; Presseartikel</a>` : "";
   return `<div class="game-card ${r}">
     <div class="game-meta">
       <span class="game-round">${g.round||""}</span>
@@ -936,7 +1000,7 @@ function gameCardHTML(g, showEdit=false) {
       : `<div style="font-size:13px;color:var(--muted);padding:4px 0">Noch nicht gespielt</div>`}
     <div class="game-venue">&#128205; ${g.venue||""}</div>
     ${g.note?`<div class="game-note">&#9917; ${g.note}</div>`:""}
-    ${pdfBtn}${editBtn}
+    ${pdfBtn}${presseBtn}${editBtn}
   </div>`;
 }
 
@@ -1043,12 +1107,13 @@ function renderTorjaeger() {
 // SPIELER (SAMMELALBUM)
 // ═══════════════════════════════════════
 const POSITIONEN = {
-  TW:"Torwart", RA:"Rechtsaußen", RR:"Rechter Rückraum", RM:"Rückraum Mitte",
-  RL:"Linker Rückraum", LA:"Linksaußen", KL:"Kreisläufer",
+  TW:"Torwart", RA:"Rechtsaußen", RR:"Rückraum Rechts", RM:"Rückraum Mitte",
+  RL:"Rückraum Links", LA:"Linksaußen", KL:"Kreisläufer",
 };
 const STAFF_ROLLEN = { TR:"Trainer", CO:"Co-Trainer", BE:"Betreuer" };
 const ALLE_ROLLEN = { ...POSITIONEN, ...STAFF_ROLLEN };
 function istBetreuerstab(p) { return !!STAFF_ROLLEN[p.position]; }
+function redaktionellerName(p) { return (p.vorname||"") + (p.nachname ? " "+p.nachname : ""); }
 
 function playerGoalsIn(vorname, seasonId) {
   const season = STATE.seasons[seasonId];
@@ -1089,6 +1154,7 @@ function playerCardHTML(p) {
         ${photo}
       </div>
       <div class="player-name">${p.vorname||"—"}</div>
+      ${p.nachname?`<div class="player-lastname">${p.nachname}</div>`:""}
       <div class="player-pos">${ALLE_ROLLEN[p.position]||p.position||"—"}</div>
       ${stats}
       ${p.geburtstag?`<div class="player-bday">&#127874; ${p.geburtstag}</div>`:""}
@@ -2425,6 +2491,65 @@ function resetJingleVotes() {
 }
 
 // ═══════════════════════════════════════
+// PRESSE
+// ═══════════════════════════════════════
+function pressArtikelFuerSpiel(gameId) {
+  return (STATE.presseIntern||[]).find(p => p.gameId === gameId) || null;
+}
+
+function openPresseArtikel(id) {
+  const art = (STATE.presseIntern||[]).find(p => p.id === id);
+  if(!art) return;
+  document.getElementById("presseModalTitel").textContent = art.titel || "Presseartikel";
+  document.getElementById("presseModalFrame").src = art.datei;
+  openModal("presseModal");
+}
+
+function switchPresseTab(tab) {
+  STATE.presseSubTab = tab;
+  renderPresse();
+}
+
+function renderPresse() {
+  const el = document.getElementById("view-presse");
+  const sub = STATE.presseSubTab || "intern";
+  const intern = (STATE.presseIntern||[]).filter(p=>p.season===STATE.activeSeason).slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||""));
+  const extern = (STATE.presseExtern||[]).filter(p=>p.season===STATE.activeSeason).slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||""));
+
+  let h = `<div class="shdr" style="margin-top:0">&#128240; Presse</div>`;
+  h += `<div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="btn ${sub==='intern'?'btn-p':'btn-d'} btn-sm" style="width:auto;padding:8px 16px" onclick="switchPresseTab('intern')">Intern</button>
+    <button class="btn ${sub==='extern'?'btn-p':'btn-d'} btn-sm" style="width:auto;padding:8px 16px" onclick="switchPresseTab('extern')">Extern</button>
+  </div>`;
+
+  if(sub === "intern") {
+    if(!intern.length) {
+      h += `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Noch keine internen Presseartikel für diese Saison.</div>`;
+    } else {
+      h += intern.map(a => `
+        <div class="card" style="cursor:pointer" onclick="openPresseArtikel('${a.id}')">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${a.titel||"(ohne Titel)"}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${fmtDate(a.datum)}</div>
+        </div>`).join("");
+    }
+  } else {
+    if(!extern.length) {
+      h += `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Noch keine externen Presseartikel für diese Saison.</div>`;
+    } else {
+      h += extern.map(a => {
+        const link = a.pdfDatei ? (FOTO_BASE + a.pdfDatei) : a.link;
+        return `<div class="card">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${a.titel||"(ohne Titel)"}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${a.quelle||""}${a.quelle&&a.datum?" &middot; ":""}${fmtDate(a.datum)}</div>
+          ${link?`<a href="${link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:11px;color:var(--blue2)">${a.pdfDatei?"&#128196; PDF öffnen":"&#128279; Artikel öffnen"}</a>`:""}
+        </div>`;
+      }).join("");
+    }
+  }
+  el.innerHTML = h;
+}
+
+// ═══════════════════════════════════════
 // ADMIN / ENTER
 // ═══════════════════════════════════════
 function renderEnter() {
@@ -2503,6 +2628,69 @@ function renderEnter() {
     h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPlayer()">&#43; Person zum Team hinzufügen</button>`;
   }
 
+  // Team-Stammdaten-Migration (Nachname/Position einmalig nachtragen)
+  h += `<div class="shdr">Team-Stammdaten</div>
+  <div class="card">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Trägt Nachname und Position/Funktion für den aktuellen Kader anhand einer festen Liste bekannter Spieler-IDs nach. Bereits individuell gepflegte Werte werden dabei überschrieben.</div>
+    <button class="btn btn-g btn-sm" onclick="migrateTeamStammdaten()">&#128260; Nachname &amp; Position nachtragen</button>
+  </div>`;
+
+  // Presse verwalten
+  const editPI = (STATE.presseIntern||[]).find(p=>p.id===STATE.editPresseInternId);
+  const editPE = (STATE.presseExtern||[]).find(p=>p.id===STATE.editPresseExternId);
+  if(editPI) {
+    h += `<div class="shdr">Interner Presseartikel bearbeiten</div>`;
+    h += presseInternFormHTML(editPI);
+    h += `<button class="btn btn-p" onclick="savePresseIntern()">&#128190; Speichern</button>`;
+    h += `<button class="btn btn-d" onclick="deletePresseIntern('${editPI.id}')">&#128465; Löschen</button>`;
+    h += `<button class="btn btn-d" onclick="STATE.editPresseInternId=null;renderEnter()">&#10006; Abbrechen</button>`;
+  } else if(editPE) {
+    h += `<div class="shdr">Externer Presseartikel bearbeiten</div>`;
+    h += presseExternFormHTML(editPE);
+    h += `<button class="btn btn-p" onclick="savePresseExtern()">&#128190; Speichern</button>`;
+    h += `<button class="btn btn-d" onclick="deletePresseExtern('${editPE.id}')">&#128465; Löschen</button>`;
+    h += `<button class="btn btn-d" onclick="STATE.editPresseExternId=null;renderEnter()">&#10006; Abbrechen</button>`;
+  } else {
+    h += `<div class="shdr">Presse verwalten</div>`;
+    h += `<div class="card" style="font-size:11px;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--white)">Intern:</strong> HTML-Datei per GitHub-Weboberfläche nach <code>presse/intern/</code> hochladen, danach hier den Dateipfad eintragen.<br>
+      <strong style="color:var(--white)">Extern:</strong> PDF nach <code>presse/extern/</code> hochladen (Dateipfad eintragen) oder direkt einen externen Link hinterlegen.
+    </div>`;
+    h += `<div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin:10px 0 4px">Intern</div>`;
+    const internList = (STATE.presseIntern||[]).filter(p=>p.season===sId);
+    if(!internList.length) {
+      h += `<div class="card" style="font-size:12px;color:var(--muted)">Noch keine internen Artikel für ${season.name}.</div>`;
+    } else {
+      internList.forEach(p => {
+        h += `<div class="player-edit">
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${p.titel||'(ohne Titel)'}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtDate(p.datum)}</div>
+          </div>
+          <button class="btn btn-g btn-sm" style="margin:0;width:auto" onclick="startEditPresseIntern('${p.id}')">&#9998;</button>
+        </div>`;
+      });
+    }
+    h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPresseIntern()">&#43; Interner Artikel (${season.name})</button>`;
+
+    h += `<div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin:16px 0 4px">Extern</div>`;
+    const externList = (STATE.presseExtern||[]).filter(p=>p.season===sId);
+    if(!externList.length) {
+      h += `<div class="card" style="font-size:12px;color:var(--muted)">Noch keine externen Artikel für ${season.name}.</div>`;
+    } else {
+      externList.forEach(p => {
+        h += `<div class="player-edit">
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${p.titel||'(ohne Titel)'}</div>
+            <div style="font-size:11px;color:var(--muted)">${p.quelle||''} ${p.quelle&&p.datum?'&middot;':''} ${fmtDate(p.datum)}</div>
+          </div>
+          <button class="btn btn-g btn-sm" style="margin:0;width:auto" onclick="startEditPresseExtern('${p.id}')">&#9998;</button>
+        </div>`;
+      });
+    }
+    h += `<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="addNewPresseExtern()">&#43; Externer Artikel (${season.name})</button>`;
+  }
+
   // Neue Saison 2026/27 Spiele
   h += `<div class="shdr">Saison 2026/27 verwalten</div>
   <div class="card" style="font-size:12px;color:var(--muted);line-height:1.6">
@@ -2513,11 +2701,11 @@ function renderEnter() {
   // Datensicherung
   h += `<div class="shdr">Datensicherung</div>
   <div class="card">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Team) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Sichert den aktuellen Datenstand (Spielpläne, Ergebnisse, Highlights, Team, Presse) als Datei <code>hsg_backup_&lt;Datum&gt;.json</code>. Regelmäßig und vor größeren Änderungen ausführen.</div>
     <button class="btn btn-g btn-sm" onclick="backupData()">&#128190; Daten jetzt sichern</button>
   </div>
   <div class="card" style="border-color:rgba(240,165,0,.3)">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Spielt eine zuvor gesicherte <code>hsg_backup_&lt;Datum&gt;.json</code> zurück. <strong style="color:var(--amber2)">Achtung:</strong> Ersetzt Spielpläne, Highlights, Team und Tor-Jingle-Stimmen vollständig durch den Inhalt der Datei — nur nutzen, um Daten nach einem Verlust wiederherzustellen.</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Spielt eine zuvor gesicherte <code>hsg_backup_&lt;Datum&gt;.json</code> zurück. <strong style="color:var(--amber2)">Achtung:</strong> Ersetzt Spielpläne, Highlights, Team, Tor-Jingle-Stimmen und Presse-Artikel vollständig durch den Inhalt der Datei — nur nutzen, um Daten nach einem Verlust wiederherzustellen.</div>
     <input type="file" id="restoreFile" accept="application/json,.json" style="margin-bottom:8px"/>
     <button class="btn btn-d btn-sm" onclick="restoreBackup()">&#9888; Backup wiederherstellen</button>
   </div>`;
@@ -2573,7 +2761,10 @@ function playerFormHTML(p) {
     `<option value="${k}" ${p.position===k?'selected':''}>${STAFF_ROLLEN[k]}</option>`).join("");
   const [gTag,gMonat] = (p.geburtstag||"").split(".").filter(Boolean);
   return `<div class="card">
-    <label>Vorname</label><input id="pVorname" value="${p.vorname||''}"/>
+    <div class="row2">
+      <div><label>Vorname</label><input id="pVorname" value="${p.vorname||''}"/></div>
+      <div><label>Nachname</label><input id="pNachname" value="${p.nachname||''}"/></div>
+    </div>
     <div class="row2">
       <div><label>Trikotnummer</label><input type="number" id="pNummer" value="${p.nummer??''}"/></div>
       <div><label>Position / Rolle</label><select id="pPosition" onchange="toggleParadenFields()">
@@ -2608,7 +2799,7 @@ function toggleParadenFields() {
 function addNewPlayer() {
   const id = "p_" + Date.now().toString();
   STATE.players = STATE.players || [];
-  STATE.players.push({id, vorname:"", nummer:"", position:"", geburtstag:"", fotoUrl:"", lieblingsfarbe:"", lieblingstier:"", lieblingsessen:"", paradenAktuell:"", paradenVorsaison:""});
+  STATE.players.push({id, vorname:"", nachname:"", nummer:"", position:"", geburtstag:"", fotoUrl:"", lieblingsfarbe:"", lieblingstier:"", lieblingsessen:"", paradenAktuell:"", paradenVorsaison:""});
   STATE.editPlayerId = id;
   renderEnter();
   setTimeout(()=>document.getElementById("view-enter").scrollTop=200,50);
@@ -2623,6 +2814,7 @@ function savePlayer() {
   const vorname = document.getElementById("pVorname").value.trim();
   if(!vorname) { toast("&#10006; Vorname erforderlich"); return; }
   p.vorname = vorname;
+  p.nachname = document.getElementById("pNachname").value.trim();
   const nummer = document.getElementById("pNummer").value;
   p.nummer = nummer!==""?parseInt(nummer):"";
   p.position = document.getElementById("pPosition").value;
@@ -2653,6 +2845,137 @@ function deletePlayer(id) {
   STATE._deletedPlayerIds.push(id);
   STATE.editPlayerId = null;
   saveAll("players").then(ok => { toast(ok?"&#9989; Gelöscht":"&#9651; Lokal gespeichert"); renderEnter(); });
+}
+
+// Team-Stammdaten einmalig anhand fester, bekannter Spieler-IDs nachtragen
+// (Nachname + Position/Funktion). Nummer/Paraden bleiben unangetastet.
+const TEAM_STAMMDATEN = {
+  "p_1788544212147": { nachname: "Osterwohldt", position: "LA" }, // Jonas
+  "p_1788544258119": { nachname: "Hoyer",       position: "RA" }, // Mats
+  "p_1788544288629": { nachname: "Drieling",    position: "RR" }, // Tim
+  "p_1788544332388": { nachname: "Böger",       position: "RL" }, // Max
+  "p_1788544367098": { nachname: "Schulz",      position: "KL" }, // Ben
+  "p_1788544409380": { nachname: "Lede",        position: "LA" }, // Leon
+  "p_1788544445227": { nachname: "Entrich",     position: "RA" }, // Nils
+  "p_1788544479462": { nachname: "Alexander",   position: "RM" }, // Rocket
+  "p_1788544526310": { nachname: "Penshorn",    position: "LA" }, // Jarek
+  "p_1788544585886": { nachname: "Bräunling",   position: "RR" }, // Luca
+  "p_1788544556654": { nachname: "Bräunling",   position: "TW" }, // Finn
+  "p_1788544614191": { nachname: "Meyer",       position: "TW" }, // Dean
+  "p_1788628852532": { nachname: "Drieling",    position: "TR" }, // Tammo
+  "p_1788628901957": { nachname: "Bräuling",    position: "CO" }, // Kevin
+};
+function migrateTeamStammdaten() {
+  const treffer = (STATE.players||[]).filter(p => TEAM_STAMMDATEN[p.id]);
+  if(!treffer.length) { toast("&#10006; Keine bekannten Spieler-IDs im aktuellen Kader gefunden"); return; }
+  if(!confirm("Nachname und Position/Funktion für " + treffer.length + " Team-Mitglied(er) nachtragen?")) return;
+  treffer.forEach(p => {
+    const d = TEAM_STAMMDATEN[p.id];
+    p.nachname = d.nachname;
+    p.position = d.position;
+  });
+  saveAll("players").then(ok => { toast(ok?"&#9989; Stammdaten aktualisiert":"&#9651; Lokal gespeichert"); renderEnter(); });
+}
+
+function presseInternFormHTML(p) {
+  const sId = p.season || STATE.activeSeason;
+  const gameOptions = (STATE.seasons[sId]?.games||[]).map(g =>
+    `<option value="${g.id}" ${p.gameId===g.id?'selected':''}>${g.round||g.date} – ${g.isHome?g.teamAway:g.teamHome}</option>`).join("");
+  return `<div class="card">
+    <label>Titel</label><input id="piTitel" value="${p.titel||''}"/>
+    <div class="row2">
+      <div><label>Datum</label><input type="date" id="piDatum" value="${p.datum||''}"/></div>
+      <div><label>Zugeordnetes Spiel (optional)</label><select id="piGameId">
+        <option value="">— kein Spiel —</option>${gameOptions}
+      </select></div>
+    </div>
+    <label>Datei (in presse/intern/ hochgeladen)</label><input id="piDatei" value="${p.datei||''}" placeholder="presse/intern/dateiname.html"/>
+    <input type="hidden" id="piSeason" value="${sId}"/>
+  </div>`;
+}
+
+function addNewPresseIntern() {
+  const id = "pi_" + Date.now().toString();
+  STATE.presseIntern = STATE.presseIntern || [];
+  STATE.presseIntern.push({id, season: STATE.activeSeason, gameId:"", titel:"", datum:"", datei:""});
+  STATE.editPresseInternId = id;
+  renderEnter();
+  setTimeout(()=>document.getElementById("view-enter").scrollTop=200,50);
+}
+
+function startEditPresseIntern(id) { STATE.editPresseInternId = id; renderEnter(); setTimeout(()=>document.getElementById("view-enter").scrollTop=200,50); }
+
+function savePresseIntern() {
+  const idx = (STATE.presseIntern||[]).findIndex(p=>p.id===STATE.editPresseInternId);
+  if(idx<0) return;
+  const p = STATE.presseIntern[idx];
+  p.titel = document.getElementById("piTitel").value.trim();
+  p.datum = document.getElementById("piDatum").value;
+  p.gameId = document.getElementById("piGameId").value;
+  p.datei = document.getElementById("piDatei").value.trim();
+  p.season = document.getElementById("piSeason").value;
+  STATE.editPresseInternId = null;
+  saveAll("presseIntern").then(ok => { toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert"); renderEnter(); });
+}
+
+function deletePresseIntern(id) {
+  if(!confirm("Presseartikel wirklich löschen?")) return;
+  STATE.presseIntern = (STATE.presseIntern||[]).filter(p=>p.id!==id);
+  STATE._deletedPresseInternIds = STATE._deletedPresseInternIds || [];
+  STATE._deletedPresseInternIds.push(id);
+  STATE.editPresseInternId = null;
+  saveAll("presseIntern").then(ok => { toast(ok?"&#9989; Gelöscht":"&#9651; Lokal gespeichert"); renderEnter(); });
+}
+
+function presseExternFormHTML(p) {
+  return `<div class="card">
+    <label>Titel</label><input id="peTitel" value="${p.titel||''}"/>
+    <div class="row2">
+      <div><label>Quelle (Zeitung)</label><input id="peQuelle" value="${p.quelle||''}"/></div>
+      <div><label>Datum</label><input type="date" id="peDatum" value="${p.datum||''}"/></div>
+    </div>
+    <label>PDF-Datei (in presse/extern/ hochgeladen, optional)</label><input id="pePdfDatei" value="${p.pdfDatei||''}" placeholder="presse/extern/dateiname.pdf"/>
+    <label>Oder: Link zum Artikel (optional)</label><input id="peLink" value="${p.link||''}" placeholder="https://..."/>
+    <div style="font-size:10px;color:var(--muted)">Mindestens eines von PDF-Datei oder Link angeben.</div>
+    <input type="hidden" id="peSeason" value="${p.season||STATE.activeSeason}"/>
+  </div>`;
+}
+
+function addNewPresseExtern() {
+  const id = "pe_" + Date.now().toString();
+  STATE.presseExtern = STATE.presseExtern || [];
+  STATE.presseExtern.push({id, season: STATE.activeSeason, titel:"", quelle:"", datum:"", pdfDatei:"", link:""});
+  STATE.editPresseExternId = id;
+  renderEnter();
+  setTimeout(()=>document.getElementById("view-enter").scrollTop=200,50);
+}
+
+function startEditPresseExtern(id) { STATE.editPresseExternId = id; renderEnter(); setTimeout(()=>document.getElementById("view-enter").scrollTop=200,50); }
+
+function savePresseExtern() {
+  const idx = (STATE.presseExtern||[]).findIndex(p=>p.id===STATE.editPresseExternId);
+  if(idx<0) return;
+  const p = STATE.presseExtern[idx];
+  const pdfDatei = document.getElementById("pePdfDatei").value.trim();
+  const link = document.getElementById("peLink").value.trim();
+  if(!pdfDatei && !link) { toast("&#10006; PDF-Datei oder Link erforderlich"); return; }
+  p.titel = document.getElementById("peTitel").value.trim();
+  p.quelle = document.getElementById("peQuelle").value.trim();
+  p.datum = document.getElementById("peDatum").value;
+  p.pdfDatei = pdfDatei;
+  p.link = link;
+  p.season = document.getElementById("peSeason").value;
+  STATE.editPresseExternId = null;
+  saveAll("presseExtern").then(ok => { toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert"); renderEnter(); });
+}
+
+function deletePresseExtern(id) {
+  if(!confirm("Presseartikel wirklich löschen?")) return;
+  STATE.presseExtern = (STATE.presseExtern||[]).filter(p=>p.id!==id);
+  STATE._deletedPresseExternIds = STATE._deletedPresseExternIds || [];
+  STATE._deletedPresseExternIds.push(id);
+  STATE.editPresseExternId = null;
+  saveAll("presseExtern").then(ok => { toast(ok?"&#9989; Gelöscht":"&#9651; Lokal gespeichert"); renderEnter(); });
 }
 
 function saveGame() {
@@ -2711,9 +3034,11 @@ function copyAppsScript() {
 var SHEET_ID = "1VdO0KffN_CJ29Pq73OfrylFa9YfR12Aqj0rXoL7jcjI";
 var SEASONS_HEADERS = ["season","name","rank"];
 var GAMES_HEADERS = ["id","season","date","time","round","isHome","teamHome","teamAway","scoreH","scoreA","venue","pdf","note"];
-var PLAYERS_HEADERS = ["id","vorname","nummer","position","geburtstag","fotoUrl","lieblingsfarbe","lieblingstier","lieblingsessen","paradenAktuell","paradenVorsaison"];
+var PLAYERS_HEADERS = ["id","vorname","nachname","nummer","position","geburtstag","fotoUrl","lieblingsfarbe","lieblingstier","lieblingsessen","paradenAktuell","paradenVorsaison"];
 var VOTES_HEADERS = ["playerId","jingleId","ts"];
 var HIGHLIGHTS_HEADERS = ["id","name","typ","ort","datum","beschreibung","website","extra_json"];
+var PRESSE_INTERN_HEADERS = ["id","season","gameId","titel","datum","datei"];
+var PRESSE_EXTERN_HEADERS = ["id","season","titel","quelle","datum","pdfDatei","link"];
 
 function doGet(e) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -2744,6 +3069,8 @@ function readAll(ss) {
   var playerRows = readRows(getSheet(ss, "Spieler", PLAYERS_HEADERS));
   var voteRows = readRows(getSheet(ss, "JingleVotes", VOTES_HEADERS));
   var hlRows = readRows(getSheet(ss, "Highlights", HIGHLIGHTS_HEADERS));
+  var piRows = readRows(getSheet(ss, "PresseIntern", PRESSE_INTERN_HEADERS));
+  var peRows = readRows(getSheet(ss, "PresseExtern", PRESSE_EXTERN_HEADERS));
 
   var seasons = {};
   metaRows.forEach(function(r) {
@@ -2765,7 +3092,7 @@ function readAll(ss) {
 
   var players = playerRows.map(function(p) {
     var obj = {
-      id: String(p.id), vorname: p.vorname || "", nummer: (p.nummer === "" || p.nummer == null) ? "" : p.nummer,
+      id: String(p.id), vorname: p.vorname || "", nachname: p.nachname || "", nummer: (p.nummer === "" || p.nummer == null) ? "" : p.nummer,
       position: p.position || "", geburtstag: p.geburtstag || "", fotoUrl: p.fotoUrl || "",
       lieblingsfarbe: p.lieblingsfarbe || "", lieblingstier: p.lieblingstier || "", lieblingsessen: p.lieblingsessen || ""
     };
@@ -2788,7 +3115,15 @@ function readAll(ss) {
     return base;
   });
 
-  return { seasons: seasons, highlights: highlights, players: players, jingleVotes: jingleVotes };
+  var presseIntern = piRows.map(function(p) {
+    return { id: String(p.id), season: String(p.season||""), gameId: String(p.gameId||""), titel: p.titel||"", datum: p.datum||"", datei: p.datei||"" };
+  });
+
+  var presseExtern = peRows.map(function(p) {
+    return { id: String(p.id), season: String(p.season||""), titel: p.titel||"", quelle: p.quelle||"", datum: p.datum||"", pdfDatei: p.pdfDatei||"", link: p.link||"" };
+  });
+
+  return { seasons: seasons, highlights: highlights, players: players, jingleVotes: jingleVotes, presseIntern: presseIntern, presseExtern: presseExtern };
 }
 
 function writeAll(ss, data) {
@@ -2814,7 +3149,7 @@ function writeAll(ss, data) {
   if (data.players) {
     var playerRows = data.players.map(function(p) {
       return {
-        id: p.id, vorname: p.vorname || "", nummer: (p.nummer == null ? "" : p.nummer),
+        id: p.id, vorname: p.vorname || "", nachname: p.nachname || "", nummer: (p.nummer == null ? "" : p.nummer),
         position: p.position || "", geburtstag: p.geburtstag || "", fotoUrl: p.fotoUrl || "",
         lieblingsfarbe: p.lieblingsfarbe || "", lieblingstier: p.lieblingstier || "", lieblingsessen: p.lieblingsessen || "",
         paradenAktuell: (p.paradenAktuell == null ? "" : p.paradenAktuell),
@@ -2844,6 +3179,20 @@ function writeAll(ss, data) {
       };
     });
     writeRows(getSheet(ss, "Highlights", HIGHLIGHTS_HEADERS), HIGHLIGHTS_HEADERS, hlRows);
+  }
+
+  if (data.presseIntern) {
+    var piRows = data.presseIntern.map(function(p) {
+      return { id: p.id, season: p.season || "", gameId: p.gameId || "", titel: p.titel || "", datum: p.datum || "", datei: p.datei || "" };
+    });
+    writeRows(getSheet(ss, "PresseIntern", PRESSE_INTERN_HEADERS), PRESSE_INTERN_HEADERS, piRows);
+  }
+
+  if (data.presseExtern) {
+    var peRows = data.presseExtern.map(function(p) {
+      return { id: p.id, season: p.season || "", titel: p.titel || "", quelle: p.quelle || "", datum: p.datum || "", pdfDatei: p.pdfDatei || "", link: p.link || "" };
+    });
+    writeRows(getSheet(ss, "PresseExtern", PRESSE_EXTERN_HEADERS), PRESSE_EXTERN_HEADERS, peRows);
   }
 }
 
@@ -2907,7 +3256,7 @@ function renderImpressum() {
       <div style="font-size:28px;flex-shrink:0">&#128106;</div>
       <div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:4px">Hinweis zur Erfassung von Spieler- und Fotodaten</div>
-        <div style="font-size:12px;color:var(--text);line-height:1.7">In dieser App werden <strong style="color:var(--white)">Vornamen von Nachwuchsspielern</strong> zusammen mit Spielstatistiken erfasst. Im Sammelalbum (Team) werden zusätzlich <strong style="color:var(--white)">Trikotnummer, Position und Geburtsdatum (TT.MM., ohne Jahr)</strong> hinterlegt. Zusätzlich sind <strong style="color:var(--white)">Teamfotos und Fotos der Spieler</strong> einsehbar.</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.7">In dieser App werden <strong style="color:var(--white)">Vor- und Nachnamen von Nachwuchsspielern</strong> zusammen mit Spielstatistiken erfasst. Im Sammelalbum (Team) werden zusätzlich <strong style="color:var(--white)">Trikotnummer, Position und Geburtsdatum (TT.MM., ohne Jahr)</strong> hinterlegt. Zusätzlich sind <strong style="color:var(--white)">Teamfotos, Fotos der Spieler und Presseartikel zu Spieltagen</strong> einsehbar.</div>
       </div>
     </div>
     ${[
@@ -2986,6 +3335,7 @@ function closeModal(id) {
   // erfolgreichem Speichern) — sonst hält adminMidEdit() den automatischen
   // Hintergrund-Sync für den Rest der Sitzung fälschlich für pausiert.
   if(id === "hlModal") STATE.hlEditId = null;
+  if(id === "presseModal") document.getElementById("presseModalFrame").src = "about:blank";
 }
 function openPin() { document.getElementById("pinInput").value=""; document.getElementById("pinErr").style.display="none"; openModal("pinModal"); }
 function checkPin() {
@@ -3005,7 +3355,7 @@ function updateAdminUI() {
 function backupData() {
   try {
     if(!STATE.seasons) { toast("&#10006; Keine Daten zum Sichern"); return; }
-    const data = { seasons: STATE.seasons, highlights: STATE.highlights || [], players: STATE.players || [], jingleVotes: STATE.jingleVotes || {} };
+    const data = { seasons: STATE.seasons, highlights: STATE.highlights || [], players: STATE.players || [], jingleVotes: STATE.jingleVotes || {}, presseIntern: STATE.presseIntern || [], presseExtern: STATE.presseExtern || [] };
     const pretty = JSON.stringify(data, null, 2);
     const d = new Date(), p = n => (n<10?"0":"")+n;
     const stamp = d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes());
@@ -3035,10 +3385,13 @@ function restoreBackup() {
     const hlCount = (data.highlights||[]).length;
     const plCount = (data.players||[]).length;
     const voteCount = Object.keys(data.jingleVotes||{}).length;
+    const piCount = (data.presseIntern||[]).length;
+    const peCount = (data.presseExtern||[]).length;
     const sure = confirm(
       "Backup wiederherstellen?\n\n" +
-      gamesCount + " Spiele, " + hlCount + " Highlight(s), " + plCount + " Team-Mitglied(er), " + voteCount + " Jingle-Stimme(n) gefunden.\n\n" +
-      "Das ersetzt den kompletten aktuellen Datenstand (Spielpläne, Highlights, Team, Tor-Jingle-Stimmen) unwiderruflich. Fortfahren?"
+      gamesCount + " Spiele, " + hlCount + " Highlight(s), " + plCount + " Team-Mitglied(er), " + voteCount + " Jingle-Stimme(n), " +
+      piCount + " interne(r) und " + peCount + " externe(r) Presseartikel gefunden.\n\n" +
+      "Das ersetzt den kompletten aktuellen Datenstand (Spielpläne, Highlights, Team, Tor-Jingle-Stimmen, Presse) unwiderruflich. Fortfahren?"
     );
     if(!sure) return;
 
@@ -3046,15 +3399,19 @@ function restoreBackup() {
     STATE.highlights = ensureHighlightIds(data.highlights || []);
     STATE.players = data.players || [];
     STATE.jingleVotes = data.jingleVotes || {};
+    STATE.presseIntern = data.presseIntern || [];
+    STATE.presseExtern = data.presseExtern || [];
     STATE._deletedPlayerIds = [];
     STATE._deletedHighlightIds = [];
+    STATE._deletedPresseInternIds = [];
+    STATE._deletedPresseExternIds = [];
     normalizeSeasons();
     input.value = "";
 
     // Alle Bereiche als geändert markieren: die Datei ist bewusst die neue
     // Wahrheit und soll den (fehlerhaften) Sheet-Stand komplett ersetzen,
     // nicht mit ihm gemergt werden.
-    saveAll(["seasons","highlights","players","jingleVotes"]).then(ok => {
+    saveAll(["seasons","highlights","players","jingleVotes","presseIntern","presseExtern"]).then(ok => {
       toast(ok ? "&#9989; Backup wiederhergestellt" : "&#9651; Wiederhergestellt, aber Sheet-Sync fehlgeschlagen");
       renderEnter();
       renderActive();
@@ -3094,7 +3451,8 @@ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 // Tippen zurücksetzen bzw. beim Highlight-Modal STATE.highlights unter der
 // Haube austauschen, während STATE.hlEditId noch auf den alten Index zeigt.
 function adminMidEdit() {
-  return STATE.editId !== null || STATE.editPlayerId !== null || STATE.hlEditId !== null;
+  return STATE.editId !== null || STATE.editPlayerId !== null || STATE.hlEditId !== null
+    || STATE.editPresseInternId !== null || STATE.editPresseExternId !== null;
 }
 
 window.addEventListener("load", () => {
