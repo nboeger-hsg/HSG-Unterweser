@@ -199,8 +199,8 @@ label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;letter-s
 .player-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:2px 0}
 .player-card{position:relative;border-radius:14px;padding:2px;background:linear-gradient(135deg,var(--amber),var(--blue));box-shadow:var(--shadow);animation:fadeUp .3s ease both}
 .player-card-inner{background:linear-gradient(165deg,var(--bg2),var(--bg));border-radius:12px;overflow:hidden}
-.player-photo{aspect-ratio:3/4;position:relative;background:linear-gradient(160deg,var(--bg3),var(--bg));display:flex;align-items:center;justify-content:center;overflow:hidden}
-.player-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.player-photo{aspect-ratio:1536/2752;position:relative;background:linear-gradient(160deg,var(--bg3),var(--bg));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.player-photo img{width:100%;height:100%;object-fit:contain;display:block}
 .player-photo .ph-ph{width:44%;opacity:.35;filter:grayscale(1)}
 .player-num{position:absolute;top:6px;left:6px;z-index:2;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#1a1200;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 .player-name{padding:8px 6px 2px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--white)}
@@ -1127,8 +1127,9 @@ function playerGoalsIn(vorname, seasonId) {
 function playerCardHTML(p) {
   const staff = istBetreuerstab(p);
   const placeholder = `<img class="ph-ph" src="icon.png" alt=""/>`;
+  const placeholderForOnerror = placeholder.replace(/'/g,"\\'").replace(/"/g,"&quot;");
   const photo = p.fotoUrl
-    ? `<img src="${p.fotoUrl}" loading="lazy" alt="${p.vorname}" onerror="this.parentNode.innerHTML='${placeholder.replace(/'/g,"\\'")}'"/>`
+    ? `<img src="${p.fotoUrl}" loading="lazy" alt="${p.vorname}" onerror="this.parentNode.innerHTML='${placeholderForOnerror}'"/>`
     : placeholder;
   const extras = [
     p.lieblingsfarbe ? `<span>&#127912; ${p.lieblingsfarbe}</span>` : "",
