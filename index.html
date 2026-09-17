@@ -374,11 +374,22 @@ function audioMime(file) {
 }
 const SONG_BASE = FOTO_BASE + "songs/Teamsongs/";
 const SONGS = [
-  // Neuer Song: MP3 in den Ordner /songs im Repo legen + eine Zeile hier + committen
-  {title:"Feuer für die HSG (Remix)", file:"Feuer_fuer_die_HSG_Remix.mp3"},
-  {title:"Feuer für die HSG II",      file:"Feuer_fuer_die_HSG_II.mp3"},
-  {title:"HSG Eskalation",            file:"HSG_Eskalation.mp3"},
-  {title:"HSG Fan-Lied",              file:"HSG_Fan_Lied.mp3"},
+  // Neuer Song: Datei nach songs/Teamsongs/ legen + eine Zeile hier + committen
+  {title:"Einlauf · HSG Plattdeutsch",                          file:"Einlauf _HSG_Plattdeutsch.m4a"},
+  {title:"Fanlied · HSG Feuer (Dt. Rock, Pop-Bass)",            file:"Fanlied_HSG_Feuer_DtRock_PopBass.m4a"},
+  {title:"Fanlied · HSG Feuer (Dt. Rock, Pop-Bass Duo)",        file:"Fanlied_HSG_Feuer_DtRock_PopBassDuo.m4a"},
+  {title:"Fanlied · HSG Feuer Remix (Bass Extrem)",             file:"Fanlied_HSG_Feuer_Remix_BassExtrem.m4a"},
+  {title:"Fanlied · HSG Feuer Remix (Stadion-Bass)",            file:"Fanlied_HSG_Feuer_Remix_StadionBass.m4a"},
+  {title:"Fanlied · HSG Eskalation (90er Dt. Rock)",            file:"Fanlied_HSG_Eskalation_90sDtRock.m4a"},
+  {title:"Fanlied · HSG Links der Weser (Dt. Rock, Stadion)",   file:"Fanlied_HSG_Links_der_Weser_DtRock_Stadion.m4a"},
+  {title:"Fanlied · HSG Links der Weser (Stadionrock, 180 BPM)",file:"Fanlied_HSG_Links_der_Weser_DtStadionRock_180BPM.m4a"},
+  {title:"Fanexperiment · HSG Feuer (Dt. Elektronik)",          file:"Fanexperiment_HSG_Feuer_DtElektronik.m4a"},
+  {title:"Halbzeit · HSG Eskalation (Dt. Rock, 98 BPM)",        file:"Halbzeit_HSG_Eskalation_98BPM_DtRock.m4a"},
+  {title:"Extrem · HSG Nur Lärm (Techno)",                      file:"Extrem_HSG_Nur_Lärm_Techno.m4a"},
+  {title:"Extrem · HSG Nur Lärm (Techno Extrem)",               file:"Extrem_HSG_Nur_Lärm_TechnoExtrem.m4a"},
+  {title:"Jingle · HSG Nur Lärm (Techno-Mix)",                  file:"Jingle_HSG_Nur_Lärm_TechnoMix.m4a"},
+  {title:"Schlusslied · HSG Helden (Dt. Rock)",                 file:"Schlusslied_HSG_Helden_DtRock.m4a"},
+  {title:"Schlusslied · HSG Scheiß drauf (Dt. Schlager)",       file:"Schlusslied_HSG_Scheiss_drauf_DtSchlager.m4a"},
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -411,6 +422,7 @@ const JINGLES = [
   {id:"j-the-glen",         title:"The Glen",          file:"The Glen.m4a"},
   {id:"j-tiamo-2",          title:"Ti Amo II",         file:"TiAmo II.m4a"},
   {id:"j-yeah",             title:"Yeah",              file:"Yeah.m4a"},
+  {id:"j-nur-laerm-techno", title:"Nur Lärm (Techno-Mix)", file:"Jingle_HSG_Nur_Lärm_TechnoMix.m4a"},
 ];
 
 const NAME_FIX = {"Roeckt":"Rocket","Röckt":"Rocket"};
