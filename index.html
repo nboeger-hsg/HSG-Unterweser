@@ -658,12 +658,24 @@ function sheetHasData(d) {
 async function syncAll() {
   setBanner("Verbinde mit Google Sheets...", false);
   const data = await gsReadJSONP();
+  let _playersHeal = false;
 
   if (data && data.seasons && sheetHasData(data)) {
     // ✅ Sheet hat Daten → übernehmen
     STATE.seasons    = data.seasons;
     STATE.highlights = data.highlights || [];
-    STATE.players    = data.players || [];
+    // Kader-Schutz: liefert das Sheet einen leeren Kader, obwohl dieses Gerät
+    // noch Spieler kennt (und keine Löschung aussteht), wird der lokale Kader
+    // behalten und anschließend ins Sheet zurückgeschrieben.
+    const _sheetPl = data.players || [];
+    const _localPl = (STATE.players && STATE.players.length) ? STATE.players
+                   : ((LS.get("hsg_v7") || {}).players || []);
+    if (!_sheetPl.length && _localPl.length && !(STATE._deletedPlayerIds||[]).length) {
+      STATE.players = _localPl;
+      _playersHeal = true;
+    } else {
+      STATE.players = _sheetPl;
+    }
     STATE.jingleVotes = data.jingleVotes || {};
     STATE.presseIntern = data.presseIntern || [];
     STATE.presseExtern = data.presseExtern || [];
@@ -742,7 +754,8 @@ async function syncAll() {
   const _seeded26 = normalizeSeasons();
   LS.set("hsg_v7", {seasons: STATE.seasons, highlights: STATE.highlights, players: STATE.players, jingleVotes: STATE.jingleVotes, presseIntern: STATE.presseIntern, presseExtern: STATE.presseExtern});
   if (_seeded26 && data && data.seasons) { await saveAll(); }
-  renderActive();
+  if (_playersHeal) { await saveAll("players"); }
+  if (!mediaPlaying()) renderActive();
 }
 
 function mergeGamesById(freshGames, localGames) {
@@ -833,6 +846,8 @@ async function saveAll(dirtySections) {
       const byId = new Map(freshPlayers.filter(p=>!deletedIds.includes(p.id)).map(p => [p.id, p]));
       (STATE.players||[]).forEach(p => byId.set(p.id, p));
       STATE.players = Array.from(byId.values());
+    } else if (!freshPlayers.length && (STATE.players||[]).length && !deletedIds.length) {
+      // Sheet-Kader leer, lokal vorhanden -> nicht mit leerer Liste überschreiben
     } else {
       STATE.players = freshPlayers.filter(p=>!deletedIds.includes(p.id));
     }
@@ -2427,16 +2442,16 @@ function jingleTally() {
 
 function renderJinglesHTML() {
   const players = (STATE.players||[]).filter(p=>!istBetreuerstab(p));
-  if(!players.length) {
-    return `<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center">Noch kein Team erfasst — Abstimmung ist erst möglich, wenn Spieler im Team angelegt sind.</div>`;
-  }
+  const canVote = players.length > 0;
   let lastId = "";
   try { lastId = localStorage.getItem("hsg_jingleVoterId") || ""; } catch(e) {}
   if(lastId && !players.some(p=>p.id===lastId)) lastId = "";
   const currentVote = lastId ? STATE.jingleVotes[lastId] : null;
   const currentTitle = currentVote ? (JINGLES.find(j=>j.id===currentVote.jingleId)||{}).title : null;
 
-  let h = `<div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:12px">
+  let h = !canVote
+    ? `<div style="color:var(--muted);font-size:12px;padding:10px 0 14px;text-align:center">Abstimmung erst möglich, wenn Spieler im Team angelegt sind. Anhören geht trotzdem.</div>`
+    : `<div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:12px">
     <label>Wer stimmt ab?</label>
     <select id="jingleVoter" onchange="onJingleVoterChange()">${jingleVoterOptions(lastId)}</select>
     ${currentTitle ? `<div style="font-size:11px;color:var(--blue2);margin-top:-4px">Du hast aktuell für &bdquo;${currentTitle}&ldquo; gestimmt.</div>` : ''}
@@ -2466,7 +2481,7 @@ function renderJinglesHTML() {
       <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${barPct}%"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <span style="font-size:10px;color:var(--muted)">${c} Stimme(n) &middot; ${pct}%</span>
-        <button class="btn ${isMine?'btn-d':'btn-p'} btn-sm" style="margin:0;width:auto;padding:6px 14px" onclick="castJingleVote('${j.id}')">${isMine?'Stimme ändern':'Abstimmen'}</button>
+        ${canVote ? `<button class="btn ${isMine?'btn-d':'btn-p'} btn-sm" style="margin:0;width:auto;padding:6px 14px" onclick="castJingleVote('${j.id}')">${isMine?'Stimme ändern':'Abstimmen'}</button>` : ''}
       </div>
     </div>`;
   }).join("");
@@ -3465,6 +3480,13 @@ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 // closeModal()). Ohne diesen Schutz würde ein Refresh die Eingabe mitten im
 // Tippen zurücksetzen bzw. beim Highlight-Modal STATE.highlights unter der
 // Haube austauschen, während STATE.hlEditId noch auf den alten Index zeigt.
+// Läuft gerade ein Song/Jingle? Dann keinen Hintergrund-Sync und kein
+// Neuaufbau der Ansicht — sonst wird das <audio>-Element ersetzt und die
+// Wiedergabe bricht ab (Ursache für Songs, die nach kurzer Zeit stoppen).
+function mediaPlaying() {
+  return Array.from(document.querySelectorAll("audio")).some(a => !a.paused && !a.ended);
+}
+
 function adminMidEdit() {
   return STATE.editId !== null || STATE.editPlayerId !== null || STATE.hlEditId !== null
     || STATE.editPresseInternId !== null || STATE.editPresseExternId !== null;
@@ -3476,11 +3498,11 @@ window.addEventListener("load", () => {
   // (Browser-Tab seit Stunden offen, App-Icon im Hintergrund) auf dem Stand
   // seines letzten Ladens stehen — jede Änderung, die zwischenzeitlich auf
   // einem anderen Gerät gespeichert wurde, bliebe für diesen Tab unsichtbar.
-  setInterval(()=>{ if(!adminMidEdit()) syncAll(); }, 60000);
+  setInterval(()=>{ if(!adminMidEdit() && !mediaPlaying()) syncAll(); }, 60000);
   // Beim Zurückkehren aus dem Hintergrund (Handy-App-Wechsel) sofort neu
   // synchronisieren, statt bis zu 60 Sekunden auf das Intervall zu warten.
   document.addEventListener("visibilitychange", () => {
-    if(document.visibilityState === "visible" && !adminMidEdit()) syncAll();
+    if(document.visibilityState === "visible" && !adminMidEdit() && !mediaPlaying()) syncAll();
   });
 });
 </script>
