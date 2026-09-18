@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vorbericht: Hagener SV II – HSG Unterweser II</title>
+<style>
+  :root {
+    --schwarz: #05070A;
+    --anthrazit: #14181E;
+    --linie: #252B33;
+    --weiss: #FFFFFF;
+    --text: #D9DEE4;
+    --grau: #8C96A3;
+    --cyan: #00C2DC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--schwarz); }
+  body {
+    background: var(--schwarz);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+  .seite { max-width: 640px; margin: 0 auto; }
+
+  /* Kopf */
+  .kopf {
+    position: relative;
+    overflow: hidden;
+    padding: 36px 22px 30px;
+    background: var(--anthrazit);
+  }
+  .kopf::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: 0;
+    width: 150px;
+    height: 100%;
+    background: var(--cyan);
+    transform: skewX(-18deg);
+    opacity: 0.9;
+  }
+  .kopf-inhalt { position: relative; z-index: 1; padding-right: 70px; }
+  .rubrik {
+    display: inline-block;
+    background: var(--cyan);
+    color: var(--schwarz);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    margin-bottom: 18px;
+  }
+  .paarung {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    font-stretch: condensed;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--weiss);
+    font-size: 34px;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+  }
+  .paarung .gegen { display: block; color: var(--grau); font-size: 18px; margin: 6px 0; letter-spacing: 0.05em; }
+  .anwurf {
+    margin-top: 20px;
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    font-stretch: condensed;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--weiss);
+  }
+  .anwurf span { color: var(--cyan); }
+
+  /* Inhalt */
+  main { padding: 30px 22px 10px; }
+  h1 {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    font-stretch: condensed;
+    color: var(--weiss);
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .teaser { color: var(--weiss); font-size: 18px; margin-bottom: 22px; }
+  p { margin-bottom: 16px; }
+
+  /* Info-Block */
+  .info {
+    margin: 30px 0 8px;
+    background: var(--anthrazit);
+    border-left: 5px solid var(--cyan);
+    padding: 20px 20px 8px;
+  }
+  .info h2 {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    font-stretch: condensed;
+    color: var(--cyan);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+  .zeile { display: flex; gap: 14px; padding: 8px 0; border-top: 1px solid var(--linie); }
+  .zeile:first-of-type { border-top: none; }
+  .zeile dt { flex: 0 0 104px; color: var(--grau); font-size: 15px; }
+  .zeile dd { flex: 1; color: var(--weiss); font-size: 16px; }
+  a { color: var(--cyan); font-weight: 600; }
+  a:focus-visible { outline: 2px solid var(--weiss); outline-offset: 3px; }
+
+  /* Tipp */
+  .tipp {
+    margin: 26px 0 30px;
+    background: var(--cyan);
+    color: var(--schwarz);
+    padding: 20px;
+  }
+  .tipp strong { display: block; font-size: 19px; margin-bottom: 4px; }
+  .tipp a { color: var(--schwarz); text-decoration: underline; font-weight: 700; word-break: break-word; }
+
+  footer { padding: 0 22px 34px; color: var(--grau); font-size: 13px; }
+
+  @media (max-width: 380px) {
+    .paarung { font-size: 29px; }
+    .zeile { flex-direction: column; gap: 0; }
+    .zeile dt { flex: none; }
+  }
+</style>
+</head>
+<body>
+<div class="seite">
+
+  <header class="kopf">
+    <div class="kopf-inhalt">
+      <div class="rubrik">VORBERICHT</div>
+      <div class="paarung">
+        Hagener SV II
+        <span class="gegen">gegen</span>
+        HSG Unterweser II
+      </div>
+      <div class="anwurf">Samstag, 19.09. <span>10:45 Uhr</span></div>
+    </div>
+  </header>
+
+  <main>
+    <h1>Rollentausch in Hagen: CII will nach dem Ausrufezeichen nachlegen</h1>
+
+    <p class="teaser">Zwei Wochen nach dem 35:20 in Ritterhude geht es für die männliche CII weiter. Am Samstag tritt die HSG Unterweser II beim Hagener SV II an, und zwar in einer Rolle, die für diese Mannschaft neu ist.</p>
+
+    <p>Der Saisonauftakt hat einen Maßstab gesetzt. Bei der TuSG Ritterhude führte die CII zur Pause mit 15:12. Im zweiten Durchgang zog sie dann davon: 20:8 lautete die zweite Halbzeit, am Ende stand ein Sieg mit 15 Toren Vorsprung.</p>
+
+    <p>Der Gastgeber hat einen schweren Start hinter sich. Zum Auftakt unterlag Hagen II zu Hause der TuSG Ritterhude mit 22:52 (10:28). Am vergangenen Montag folgte im vereinsinternen Duell mit der ersten Mannschaft des Hagener SV ein 15:51 (6:28). Das bedeutet zwei Spiele, zwei Niederlagen und 37:103 Tore.</p>
+
+    <p>Auffällig war in beiden Partien die Anfangsphase. Gegen Ritterhude lag Hagen II nach fünf Minuten mit 0:6 zurück, gegen die eigene Erste nach knapp fünf Minuten mit 1:9. Die zweiten Halbzeiten gestaltete die Mannschaft dagegen jeweils enger.</p>
+
+    <p>Rechenspiele über den gemeinsamen Gegner Ritterhude liegen nahe. Sie tragen im Jugendhandball aber nur begrenzt, denn Besetzung und Tagesform ändern sich von Woche zu Woche.</p>
+
+    <p>Für die CII ist die Lage ungewohnt. In der Vorsaison war sie als altersmäßig unterlegenes Team oft selbst die Mannschaft, die deutliche Niederlagen einstecken musste. Am Ende standen zwei Siege aus 16 Spielen, doch die Gruppe hielt zusammen und gab nie auf. Sie kennt diese Seite des Jugendhandballs also aus eigener Erfahrung.</p>
+
+    <p>Nun geht es darum, den Schwung aus Ritterhude mitzunehmen und das eigene Spiel über die vollen 50 Minuten durchzuziehen. Der Auftakt war ein Ausrufezeichen. Das zweite Spiel zeigt, ob daraus eine Linie wird.</p>
+
+    <section class="info">
+      <h2>SPIELINFO</h2>
+      <dl>
+        <div class="zeile"><dt>Partie</dt><dd>Hagener SV II – HSG Unterweser II</dd></div>
+        <div class="zeile"><dt>Anwurf</dt><dd>Samstag, 19.09.2026, 10:45 Uhr</dd></div>
+        <div class="zeile"><dt>Halle</dt><dd>Sporthalle Schulzentrum<br>Amtsplatz, 27628 Hagen<br><a href="https://www.google.com/maps/search/?api=1&amp;query=Amtsplatz%2C%2027628%20Hagen">Route öffnen</a></dd></div>
+        <div class="zeile"><dt>Liga</dt><dd>Regionsoberliga männliche Jugend C Nord/Ost</dd></div>
+        <div class="zeile"><dt>Hagen II</dt><dd>0:4 Punkte, 37:103 Tore</dd></div>
+        <div class="zeile"><dt>HSG II</dt><dd>2:0 Punkte, 35:20 Tore</dd></div>
+        <div class="zeile"><dt>Danach</dt><dd>Samstag, 03.10.2026, 15:45 Uhr<br>HSG Unterweser II – HSG Land Hadeln (Heimspiel)</dd></div>
+      </dl>
+    </section>
+
+    <div class="tipp">
+      <strong>Tipp</strong>
+      Alle Informationen in der HSG Unterweser CII App:<br>
+      <a href="https://nboeger-hsg.github.io/HSG-Unterweser/">nboeger-hsg.github.io/HSG-Unterweser</a>
+    </div>
+  </main>
+
+  <footer>HSG Unterweser – männliche Jugend CII, Saison 2026/27</footer>
+
+</div>
+</body>
+</html>
