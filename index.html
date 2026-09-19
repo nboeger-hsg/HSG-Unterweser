@@ -354,6 +354,23 @@ const FOTO_ALBEN = {
 };
 function fotosListe() { return FOTOS[STATE.activeSeason] || []; }
 function fotoAlbenListe() { return FOTO_ALBEN[STATE.activeSeason] || []; }
+// Spieltag-Alben: pro Spiel im Admin-Bereich gepflegtes Feld g.fotoalbum.
+function safeAlbumUrl(u) {
+  u = String(u||"").trim();
+  return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : "";
+}
+function spielAlbenListe() {
+  return games().filter(g => safeAlbumUrl(g.fotoalbum)).map(g => ({
+    label: (g.round ? g.round + " · " : "") + (g.isHome ? g.teamAway : g.teamHome),
+    url: safeAlbumUrl(g.fotoalbum)
+  }));
+}
+function alleAlbenListe() {
+  const seen = new Set();
+  return [...fotoAlbenListe(), ...spielAlbenListe()].filter(a => {
+    if (seen.has(a.url)) return false; seen.add(a.url); return true;
+  });
+}
 /* ═══════════════════════════════════════════════════════════════
    ANLEITUNG · SONGS VERWALTEN
    ───────────────────────────────────────────────────────────────
@@ -1014,6 +1031,9 @@ function gameCardHTML(g, showEdit=false) {
     `<button class="btn btn-sm" style="margin-top:8px;width:auto;padding:5px 12px" onclick="startEdit('${g.id}')">&#9998; Bearbeiten</button>` : "";
   const pdfBtn = g.pdf ?
     `<a href="${g.pdf}" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;color:var(--blue2)">&#128196; Spielbericht</a>` : "";
+  const albumUrl = safeAlbumUrl(g.fotoalbum);
+  const albumBtn = albumUrl ?
+    `<a href="${albumUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;margin-right:12px;font-size:11px;color:var(--green)">&#128247; Fotoalbum</a>` : "";
   const presseArtikel = pressArtikelFuerSpiel(g.id);
   const presseBtn = presseArtikel ?
     `<a href="javascript:void(0)" onclick="openPresseArtikel('${presseArtikel.id}')" style="display:inline-block;margin-top:6px;margin-left:12px;font-size:11px;color:var(--blue2)">&#128240; Presseartikel</a>` : "";
@@ -1028,7 +1048,7 @@ function gameCardHTML(g, showEdit=false) {
       : `<div style="font-size:13px;color:var(--muted);padding:4px 0">Noch nicht gespielt</div>`}
     <div class="game-venue">&#128205; ${g.venue||""}</div>
     ${g.note?`<div class="game-note">&#9917; ${g.note}</div>`:""}
-    ${pdfBtn}${presseBtn}${editBtn}
+    ${albumBtn}${pdfBtn}${presseBtn}${editBtn}
   </div>`;
 }
 
@@ -2160,7 +2180,7 @@ let lbIndex = 0;
 function renderFotos() {
   const el = document.getElementById("view-fotos");
   const liste = fotosListe();
-  const alben = fotoAlbenListe();
+  const alben = alleAlbenListe();
   const sName = STATE.seasons[STATE.activeSeason]?.name || "";
   let grid = liste.map((path,i) =>
     `<div class="foto-thumb loading" onclick="lbOpenList(fotosListe(),${i})">
@@ -2778,6 +2798,7 @@ function gameFormHTML(g) {
     <label>Torschützen (Leon 5 Tore; Max 3 Tore; Ben 2 Tore (7M 1/1))</label>
     <textarea id="eNote" rows="3">${g.note||''}</textarea>
     <label>PDF-Spielbericht URL</label><input id="ePdf" value="${g.pdf||''}"/>
+    <label>&#128247; Google-Fotos-Album (Link)</label><input id="eFotoalbum" type="url" inputmode="url" placeholder="https://photos.app.goo.gl/..." value="${safeAlbumUrl(g.fotoalbum)}"/>
   </div>`;
 }
 
@@ -3026,6 +3047,12 @@ function saveGame() {
   g.scoreA = sa!==""?parseInt(sa):undefined;
   g.note   = document.getElementById("eNote").value.trim();
   g.pdf    = document.getElementById("ePdf").value.trim();
+  const faRoh = (document.getElementById("eFotoalbum")?.value||"").trim();
+  if (faRoh && !safeAlbumUrl(faRoh)) {
+    toast("Album-Link muss mit https:// beginnen", true);
+    return;
+  }
+  g.fotoalbum = safeAlbumUrl(faRoh);
   STATE.editId = null;
   saveAll("seasons").then(ok => {
     toast(ok?"&#9989; Gespeichert":"&#9651; Lokal gespeichert");
@@ -3046,7 +3073,7 @@ function addNewGame() {
   STATE.seasons["2026-27"].games.push({
     id, date:"", time:"", round:"1. Spieltag",
     isHome:true, teamHome:"HSG Unterweser CII", teamAway:"",
-    venue:"", pdf:"", note:""
+    venue:"", pdf:"", note:"", fotoalbum:""
   });
   STATE.editId = id;
   const enterTab = Array.from(document.querySelectorAll(".tab")).find(t => t.getAttribute("onclick").includes("'enter'"));
@@ -3063,7 +3090,7 @@ function copyAppsScript() {
 
 var SHEET_ID = "1VdO0KffN_CJ29Pq73OfrylFa9YfR12Aqj0rXoL7jcjI";
 var SEASONS_HEADERS = ["season","name","rank"];
-var GAMES_HEADERS = ["id","season","date","time","round","isHome","teamHome","teamAway","scoreH","scoreA","venue","pdf","note"];
+var GAMES_HEADERS = ["id","season","date","time","round","isHome","teamHome","teamAway","scoreH","scoreA","venue","pdf","note","fotoalbum"];
 var PLAYERS_HEADERS = ["id","vorname","nachname","nummer","position","geburtstag","fotoUrl","lieblingsfarbe","lieblingstier","lieblingsessen","paradenAktuell","paradenVorsaison"];
 var VOTES_HEADERS = ["playerId","jingleId","ts"];
 var HIGHLIGHTS_HEADERS = ["id","name","typ","ort","datum","beschreibung","website","extra_json"];
@@ -3113,7 +3140,7 @@ function readAll(ss) {
       id: String(g.id), date: g.date || "", time: g.time || "", round: g.round || "",
       isHome: g.isHome === true || g.isHome === "true" || g.isHome === "TRUE" || g.isHome === 1,
       teamHome: g.teamHome || "", teamAway: g.teamAway || "", venue: g.venue || "",
-      pdf: g.pdf || "", note: g.note || ""
+      pdf: g.pdf || "", note: g.note || "", fotoalbum: g.fotoalbum || ""
     };
     if (g.scoreH !== "" && g.scoreH != null) game.scoreH = Number(g.scoreH);
     if (g.scoreA !== "" && g.scoreA != null) game.scoreA = Number(g.scoreA);
@@ -3160,6 +3187,12 @@ function writeAll(ss, data) {
   if (data.seasons) {
     var metaRows = [];
     var gameRows = [];
+    // Fotoalbum-Schutz: Clients ohne das Feld (alte App-Version) liefern kein
+    // fotoalbum mit -> vorhandenen Wert aus dem Sheet beibehalten.
+    var altAlben = {};
+    readRows(getSheet(ss, "Spiele", GAMES_HEADERS)).forEach(function(r) {
+      if (r.fotoalbum) altAlben[String(r.id)] = r.fotoalbum;
+    });
     Object.keys(data.seasons).forEach(function(sid) {
       var s = data.seasons[sid] || {};
       metaRows.push({ season: sid, name: s.name || "", rank: (s.rank == null ? "" : s.rank) });
@@ -3168,7 +3201,8 @@ function writeAll(ss, data) {
           id: g.id, season: sid, date: g.date || "", time: g.time || "", round: g.round || "",
           isHome: !!g.isHome, teamHome: g.teamHome || "", teamAway: g.teamAway || "",
           scoreH: (g.scoreH === undefined ? "" : g.scoreH), scoreA: (g.scoreA === undefined ? "" : g.scoreA),
-          venue: g.venue || "", pdf: g.pdf || "", note: g.note || ""
+          venue: g.venue || "", pdf: g.pdf || "", note: g.note || "",
+          fotoalbum: (g.fotoalbum !== undefined) ? (g.fotoalbum || "") : (altAlben[String(g.id)] || "")
         });
       });
     });
